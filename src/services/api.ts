@@ -363,7 +363,7 @@ export const apiService = {
     dashboard: {
         async getStats(): Promise<DashboardStats> {
             const response = await apiClient.get<ApiResponse<DashboardStats>>(
-                '/api/dashboard/stats'
+                '/api/v1/dashboard/stats'
             );
             return response.data.data;
         },
@@ -374,7 +374,7 @@ export const apiService = {
             type?: string;
         }): Promise<PaginatedResponse<ActivityItem>> {
             const response = await apiClient.get<ApiResponse<PaginatedResponse<ActivityItem>>>(
-                '/api/dashboard/activity',
+                '/api/v1/dashboard/activity',
                 { params }
             );
             return response.data.data;
