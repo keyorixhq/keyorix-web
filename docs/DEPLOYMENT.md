@@ -1,6 +1,6 @@
 # Web Dashboard Deployment Guide
 
-This guide covers deploying the Secretly web dashboard in various environments.
+This guide covers deploying the Keyorix web dashboard in various environments.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ The application will be available at `http://localhost:3000`.
 
 1. Build the Docker image:
 ```bash
-docker build -t secretly-web .
+docker build -t keyorix-web .
 ```
 
 2. Run with Docker Compose:
@@ -86,7 +86,7 @@ Create a `.env` file for environment-specific configuration:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api
-VITE_APP_NAME=Secretly
+VITE_APP_NAME=Keyorix
 VITE_APP_VERSION=1.0.0
 VITE_ENABLE_ANALYTICS=false
 ```

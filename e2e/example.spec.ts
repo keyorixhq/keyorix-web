@@ -8,7 +8,7 @@ test.describe('Basic Application Tests', () => {
         await page.waitForLoadState('networkidle');
 
         // Check that the page title is set
-        await expect(page).toHaveTitle(/Secretly/);
+        await expect(page).toHaveTitle(/Keyorix/);
     });
 
     test('should have proper meta tags', async ({ page }) => {

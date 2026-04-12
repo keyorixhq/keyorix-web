@@ -1,6 +1,6 @@
 # State Management with Zustand
 
-This directory contains the client-side state management implementation using Zustand for the Secretly web dashboard. The state management is organized into several specialized stores that handle different aspects of the application.
+This directory contains the client-side state management implementation using Zustand for the Keyorix web dashboard. The state management is organized into several specialized stores that handle different aspects of the application.
 
 ## Store Architecture
 
@@ -301,4 +301,4 @@ The stores integrate seamlessly with React components and other parts of the app
 - **i18n**: Preferences store manages language settings
 - **Theme System**: Preferences store controls theme application
 
-This state management architecture provides a robust, scalable foundation for the Secretly web dashboard while maintaining simplicity and developer experience.
+This state management architecture provides a robust, scalable foundation for the Keyorix web dashboard while maintaining simplicity and developer experience.

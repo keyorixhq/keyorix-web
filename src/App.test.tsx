@@ -33,7 +33,7 @@ describe('App', () => {
             </TestWrapper>
         );
 
-        expect(screen.getByText('Secretly Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('Keyorix Dashboard')).toBeInTheDocument();
     });
 
     it('renders the login form', () => {

@@ -1,12 +1,12 @@
-# Secretly Web Dashboard User Guide
+# Keyorix Web Dashboard User Guide
 
-Welcome to the Secretly web dashboard! This guide will help you get started with managing your secrets through the web interface.
+Welcome to the Keyorix web dashboard! This guide will help you get started with managing your secrets through the web interface.
 
 ## Getting Started
 
 ### Logging In
 
-1. Navigate to the Secretly web dashboard
+1. Navigate to the Keyorix web dashboard
 2. Enter your email and password
 3. Click "Sign In"
 4. If you have two-factor authentication enabled, enter your verification code
@@ -295,4 +295,4 @@ The dashboard includes comprehensive accessibility support:
 - Set up custom filters for common searches
 - Take advantage of bulk operations
 
-This guide covers the essential features of the Secretly web dashboard. For more detailed information or advanced features, consult the full documentation or contact your system administrator.
+This guide covers the essential features of the Keyorix web dashboard. For more detailed information or advanced features, consult the full documentation or contact your system administrator.

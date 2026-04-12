@@ -1,9 +1,9 @@
-// Service Worker for Secretly Web Dashboard
+// Service Worker for Keyorix Web Dashboard
 // Provides offline functionality, caching, and background sync
 
-const CACHE_NAME = 'secretly-v1';
-const STATIC_CACHE_NAME = 'secretly-static-v1';
-const DYNAMIC_CACHE_NAME = 'secretly-dynamic-v1';
+const CACHE_NAME = 'keyorix-v1';
+const STATIC_CACHE_NAME = 'keyorix-static-v1';
+const DYNAMIC_CACHE_NAME = 'keyorix-dynamic-v1';
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
