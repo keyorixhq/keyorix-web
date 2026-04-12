@@ -59,4 +59,5 @@ tmp/
 temp/
 
 # Bundle analyzer
-bundle-analyzer-report.html
+bundle-analyzer-report.html.env.production
+.env.development
