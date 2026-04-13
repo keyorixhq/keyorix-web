@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
+import { SecretsListPage } from "./pages/secrets/SecretsListPage";
 import { ProtectedRoute, PublicRoute, AdminRoute } from './components/layout';
 import { SessionTimeoutWarning } from './components/ui';
 import { LoginPage } from './pages/auth';
@@ -64,12 +65,7 @@ function App() {
           path={ROUTES.SECRETS}
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Secrets Management</h1>
-                  <p className="text-gray-600">Secrets features will be implemented in subsequent tasks</p>
-                </div>
-              </div>
+              <SecretsListPage />
             </ProtectedRoute>
           }
         />

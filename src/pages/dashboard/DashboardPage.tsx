@@ -1,5 +1,7 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ROUTES } from '../../constants';
 import {
     KeyIcon,
     ShareIcon,
@@ -83,6 +85,7 @@ interface ActivityItemProps {
 }
 
 const ActivityItemComponent: React.FC<ActivityItemProps> = ({ activity }) => {
+    
     const { getFormattedDate, getFormattedTime } = usePreferencesStore();
 
     const getActivityIcon = (type: ActivityItem['type']) => {
@@ -149,6 +152,7 @@ const ActivityItemComponent: React.FC<ActivityItemProps> = ({ activity }) => {
 };
 
 export const DashboardPage: React.FC = () => {
+    const navigate = useNavigate();
     const { user } = useAuthStore();
 
     // Fetch dashboard statistics
@@ -174,8 +178,7 @@ export const DashboardPage: React.FC = () => {
     };
 
     const handleNavigateToSecrets = () => {
-        // Navigation would be handled by router
-        console.log('Navigate to secrets');
+        navigate(ROUTES.SECRETS);
     };
 
     const handleNavigateToSharing = () => {

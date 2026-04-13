@@ -21,6 +21,7 @@
     "no": "No"
   },
   "auth": {
+    "username": "Username",
     "login": "Login",
     "logout": "Logout",
     "email": "Email",

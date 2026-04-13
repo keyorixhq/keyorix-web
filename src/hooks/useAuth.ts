@@ -19,9 +19,11 @@ export const useAuth = () => {
         setError,
     } = useAuthStore();
 
-    // Run auth check once on mount only
+    // Run auth check once on mount only - wait for persist hydration first
     useEffect(() => {
         const init = async () => {
+            // Wait for Zustand persist to hydrate from localStorage
+            await useAuthStore.persist.rehydrate();
             const state = useAuthStore.getState();
             if (!state.isAuthenticated) {
                 await checkAuth();
