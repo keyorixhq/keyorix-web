@@ -47,7 +47,7 @@ const logError = (error: AxiosError) => {
 
 // Create main API client
 export const apiClient: AxiosInstance = axios.create({
-    baseURL: config.API_BASE_URL,
+    baseURL: '',
     timeout: config.API_TIMEOUT,
     withCredentials: true, // Important for HTTP-only cookies
     headers: {

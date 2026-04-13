@@ -197,4 +197,6 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
     );
 };
 
-export { Spinner, LoadingOverlay, Skeleton, Progress, LoadingPage };
+const Loading = LoadingPage;
+
+export { Spinner, LoadingOverlay, Skeleton, Progress, LoadingPage, Loading };

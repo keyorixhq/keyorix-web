@@ -1,7 +1,6 @@
-import { useEffect, useCallback } from 'react';
-import { useAuthStore, shouldRefreshToken, isTokenExpired } from '../store/authStore';
+import { useEffect } from 'react';
+import { useAuthStore } from '../store/authStore';
 import { getEnvConfig } from '../utils';
-import { shouldRestoreSession } from '../utils/auth';
 
 const config = getEnvConfig();
 
@@ -20,55 +19,16 @@ export const useAuth = () => {
         setError,
     } = useAuthStore();
 
-    // Auto-refresh token when needed
-    const handleTokenRefresh = useCallback(async () => {
-        if (!isAuthenticated || !token) return;
-
-        if (isTokenExpired()) {
-            // Token is expired, logout user
-            await logout();
-            setError('Your session has expired. Please log in again.');
-            return;
-        }
-
-        if (shouldRefreshToken()) {
-            try {
-                await refreshToken();
-            } catch (error) {
-                console.warn('Token refresh failed:', error);
-                // Logout will be handled by the refreshToken function
-            }
-        }
-    }, [isAuthenticated, token, logout, refreshToken, setError]);
-
-    // Check authentication status on mount and set up refresh interval
+    // Run auth check once on mount only
     useEffect(() => {
-        let refreshInterval: ReturnType<typeof setInterval>;
-
-        const initAuth = async () => {
-            if (isAuthenticated && token) {
-                // Check if current session is still valid
-                await handleTokenRefresh();
-
-                // Set up periodic token refresh check
-                refreshInterval = setInterval(handleTokenRefresh, 60000); // Check every minute
-            } else if (shouldRestoreSession()) {
-                // Try to restore session from stored data
-                await checkAuth();
-            } else {
-                // No valid session to restore, ensure we're in logged out state
+        const init = async () => {
+            const state = useAuthStore.getState();
+            if (!state.isAuthenticated) {
                 await checkAuth();
             }
         };
-
-        initAuth();
-
-        return () => {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
-        };
-    }, [isAuthenticated, token, handleTokenRefresh, checkAuth]);
+        init();
+    }, []); // Empty dependency array - run once only
 
     // Session timeout handling
     useEffect(() => {

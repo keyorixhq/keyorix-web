@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
     ChartBarIcon,
     ClockIcon,
-    TrendingUpIcon,
-    TrendingDownIcon,
+    ArrowTrendingUpIcon,
+    ArrowTrendingDownIcon,
     CalendarIcon,
     DocumentChartBarIcon,
     ArrowDownTrayIcon,
@@ -65,9 +65,9 @@ const MetricCard: React.FC<{ metric: AnalyticsMetric }> = ({ metric }) => {
     const getChangeIcon = (changeType: AnalyticsMetric['changeType']) => {
         switch (changeType) {
             case 'increase':
-                return <TrendingUpIcon className="h-4 w-4 text-green-500" />;
+                return <ArrowTrendingUpIcon className="h-4 w-4 text-green-500" />;
             case 'decrease':
-                return <TrendingDownIcon className="h-4 w-4 text-red-500" />;
+                return <ArrowTrendingDownIcon className="h-4 w-4 text-red-500" />;
             default:
                 return <div className="h-4 w-4" />;
         }
@@ -449,7 +449,7 @@ export const AnalyticsPage: React.FC = () => {
                 </div>
                 <div className="p-6 space-y-4">
                     <div className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <TrendingUpIcon className="h-5 w-5 text-blue-500 mt-0.5" />
+                        <ArrowTrendingUpIcon className="h-5 w-5 text-blue-500 mt-0.5" />
                         <div>
                             <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
                                 Increased Secret Creation
@@ -462,7 +462,7 @@ export const AnalyticsPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-start space-x-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <TrendingUpIcon className="h-5 w-5 text-green-500 mt-0.5" />
+                        <ArrowTrendingUpIcon className="h-5 w-5 text-green-500 mt-0.5" />
                         <div>
                             <h4 className="text-sm font-medium text-green-900 dark:text-green-100">
                                 Improved Sharing Adoption
@@ -475,7 +475,7 @@ export const AnalyticsPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-start space-x-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                        <TrendingDownIcon className="h-5 w-5 text-yellow-500 mt-0.5" />
+                        <ArrowTrendingDownIcon className="h-5 w-5 text-yellow-500 mt-0.5" />
                         <div>
                             <h4 className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
                                 Security Events Detected

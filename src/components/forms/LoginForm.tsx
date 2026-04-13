@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { LoginFormData } from '../../types';
-import { isValidEmail } from '../../utils';
 import { cn } from '../../utils';
 
 interface LoginFormProps {
@@ -20,7 +19,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 }) => {
     const { t } = useTranslation();
     const [formData, setFormData] = useState<LoginFormData>({
-        email: '',
+        username: '',
         password: '',
         rememberMe: false,
     });
@@ -30,10 +29,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     const validateForm = (): boolean => {
         const errors: Record<string, string> = {};
 
-        if (!formData.email.trim()) {
-            errors.email = t('validation.required', { field: t('auth.email') });
-        } else if (!isValidEmail(formData.email)) {
-            errors.email = t('validation.invalidEmail');
+        if (!formData.username.trim()) {
+            errors.username = t('validation.required', { field: t('auth.username') });
         }
 
         if (!formData.password.trim()) {
@@ -75,35 +72,35 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-            {/* Email Field */}
+            {/* Username Field */}
             <div>
                 <label
-                    htmlFor="email"
+                    htmlFor="username"
                     className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                    {t('auth.email')}
+                    {t('auth.username')}
                 </label>
                 <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    autoComplete="email"
+                    type="text"
+                    id="username"
+                    name="username"
+                    autoComplete="username"
                     required
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    value={formData.username}
+                    onChange={(e) => handleInputChange('username', e.target.value)}
                     className={cn(
                         'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400',
                         'focus:outline-none focus:ring-2 focus:ring-offset-2',
-                        validationErrors.email
+                        validationErrors.username
                             ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                             : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                     )}
-                    placeholder="user@example.com"
+                    placeholder={t('auth.username')}
                     disabled={isLoading}
                 />
-                {validationErrors.email && (
+                {validationErrors.username && (
                     <p className="mt-1 text-sm text-red-600" role="alert">
-                        {validationErrors.email}
+                        {validationErrors.username}
                     </p>
                 )}
             </div>

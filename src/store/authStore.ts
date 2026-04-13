@@ -40,8 +40,23 @@ export const useAuthStore = create<AuthStore>()(
                 try {
                     const response = await authService.login(credentials);
 
+                    const user: User = {
+                        id: response.user_id,
+                        username: response.username,
+                        email: response.email,
+                        role: 'user',
+                        permissions: [],
+                        preferences: {
+                            language: 'en',
+                            timezone: 'UTC',
+                            theme: 'system',
+                            notifications: { email: true, browser: true, sharing: true, security: true },
+                        },
+                        lastLogin: new Date().toISOString(),
+                    };
+
                     set({
-                        user: response.user,
+                        user,
                         token: response.token,
                         isAuthenticated: true,
                         isLoading: false,
@@ -50,9 +65,9 @@ export const useAuthStore = create<AuthStore>()(
 
                     // Persist authentication data
                     persistAuthData({
-                        user: response.user,
+                        user,
                         token: response.token,
-                        expiresAt: response.expiresAt,
+                        expiresAt: response.expires_at,
                         rememberMe: credentials.rememberMe,
                     });
                 } catch (error) {
@@ -109,56 +124,14 @@ export const useAuthStore = create<AuthStore>()(
             },
 
             checkAuth: async () => {
-                set({ isLoading: true });
-
-                try {
-                    // First check if we have valid persisted data
-                    const currentState = getCurrentAuthState();
-
-                    if (currentState.isAuthenticated && isTokenValid()) {
-                        // We have valid persisted data, use it
-                        set({
-                            user: currentState.user,
-                            token: currentState.token,
-                            isAuthenticated: true,
-                            isLoading: false,
-                            error: null,
-                        });
-                        return;
-                    }
-
-                    // If no valid persisted data, check with server
-                    const user = await authService.checkAuth();
-
-                    if (user) {
-                        set({
-                            user,
-                            isAuthenticated: true,
-                            isLoading: false,
-                            error: null,
-                        });
-                    } else {
-                        // Clear any invalid persisted data
-                        clearPersistedAuthData();
-                        set({
-                            user: null,
-                            token: null,
-                            isAuthenticated: false,
-                            isLoading: false,
-                            error: null,
-                        });
-                    }
-                } catch (error) {
-                    // Clear any invalid persisted data
-                    clearPersistedAuthData();
-                    set({
-                        user: null,
-                        token: null,
-                        isAuthenticated: false,
-                        isLoading: false,
-                        error: null,
-                    });
+                const state = get();
+                // If already authenticated, nothing to do
+                if (state.isAuthenticated && state.token) {
+                    set({ isLoading: false });
+                    return;
                 }
+                // Not authenticated, go straight to login
+                set({ isLoading: false, isAuthenticated: false, user: null, token: null });
             },
 
             clearError: () => {

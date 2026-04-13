@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { Notification } from '../types';
+import { AppNotification } from '../types';
 
 interface NotificationState {
-    notifications: Notification[];
+    notifications: AppNotification[];
     unreadCount: number;
 
     // Actions
-    addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
+    addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void;
     removeNotification: (id: string) => void;
     markAsRead: (id: string) => void;
     markAllAsRead: () => void;
@@ -15,8 +15,8 @@ interface NotificationState {
     clearRead: () => void;
 
     // Getters
-    getUnreadNotifications: () => Notification[];
-    getNotificationsByType: (type: Notification['type']) => Notification[];
+    getUnreadNotifications: () => AppNotification[];
+    getNotificationsByType: (type: AppNotification['type']) => AppNotification[];
 }
 
 export const useNotificationStore = create<NotificationState>()(
@@ -27,7 +27,7 @@ export const useNotificationStore = create<NotificationState>()(
                 unreadCount: 0,
 
                 addNotification: (notificationData) => {
-                    const notification: Notification = {
+                    const notification: AppNotification = {
                         id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                         timestamp: new Date().toISOString(),
                         read: false,

@@ -5,7 +5,7 @@ import {
     ShareIcon,
     EyeIcon,
     ClockIcon,
-    TrendingUpIcon,
+    ArrowTrendingUpIcon,
     ShieldCheckIcon,
     UserGroupIcon,
     ExclamationTriangleIcon
@@ -56,7 +56,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, trend, co
                     </p>
                     {trend && (
                         <div className="flex items-center mt-2">
-                            <TrendingUpIcon
+                            <ArrowTrendingUpIcon
                                 className={`h-4 w-4 mr-1 ${trend.isPositive ? 'text-green-500' : 'text-red-500 transform rotate-180'
                                     }`}
                             />

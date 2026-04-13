@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
-
 export default defineConfig({
     plugins: [react()],
     resolve: {
@@ -13,6 +12,21 @@ export default defineConfig({
         port: 3000,
         proxy: {
             '/api': {
+                target: 'http://localhost:8080',
+                changeOrigin: true,
+                secure: false,
+            },
+            '/auth': {
+                target: 'http://localhost:8080',
+                changeOrigin: true,
+                secure: false,
+            },
+            '/system': {
+                target: 'http://localhost:8080',
+                changeOrigin: true,
+                secure: false,
+            },
+            '/health': {
                 target: 'http://localhost:8080',
                 changeOrigin: true,
                 secure: false,

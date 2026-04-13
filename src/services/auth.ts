@@ -30,13 +30,13 @@ export const authService = {
             const response: AxiosResponse<ApiResponse<LoginResponse>> = await authApi.post(
                 API_ENDPOINTS.AUTH.LOGIN,
                 {
-                    email: credentials.email,
+                    username: credentials.username,
                     password: credentials.password,
                     rememberMe: credentials.rememberMe,
                 }
             );
 
-            if (!response.data.success) {
+            if (!response.data.data?.token) {
                 throw new Error(response.data.message || 'Login failed');
             }
 
@@ -71,7 +71,7 @@ export const authService = {
                 API_ENDPOINTS.AUTH.REFRESH
             );
 
-            if (!response.data.success) {
+            if (!response.data.data?.token) {
                 throw new Error(response.data.message || 'Token refresh failed');
             }
 
@@ -94,7 +94,7 @@ export const authService = {
                 API_ENDPOINTS.AUTH.PROFILE
             );
 
-            if (!response.data.success) {
+            if (!response.data.data) {
                 throw new Error(response.data.message || 'Failed to get profile');
             }
 
@@ -118,8 +118,8 @@ export const authService = {
                 data
             );
 
-            if (!response.data.success) {
-                throw new Error(response.data.message || 'Password reset request failed');
+            if (!response.data.message) {
+                throw new Error('Password reset request failed');
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -140,8 +140,8 @@ export const authService = {
                 data
             );
 
-            if (!response.data.success) {
-                throw new Error(response.data.message || 'Password reset failed');
+            if (!response.data.message) {
+                throw new Error('Password reset failed');
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {

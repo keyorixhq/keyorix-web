@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { ProtectedRoute, PublicRoute, AdminRoute } from './components/layout';
@@ -8,12 +7,7 @@ import { DashboardPage } from './pages/dashboard';
 import { ROUTES } from './constants';
 
 function App() {
-  const { checkAuth, isLoading } = useAuth();
-
-  // Check authentication status on app load
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+  const { isLoading } = useAuth();
 
   // Show loading screen while checking authentication
   if (isLoading) {

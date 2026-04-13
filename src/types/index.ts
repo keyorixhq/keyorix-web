@@ -132,7 +132,7 @@ export interface ValidationError {
 }
 
 // UI types
-export interface Notification {
+export interface AppNotification {
     id: string;
     type: 'success' | 'error' | 'warning' | 'info';
     title: string;
@@ -160,7 +160,7 @@ export interface PaginationState {
 
 // Authentication types
 export interface LoginFormData {
-    email: string;
+    username: string;
     password: string;
     rememberMe: boolean;
 }
@@ -174,9 +174,11 @@ export interface AuthState {
 }
 
 export interface LoginResponse {
-    user: User;
     token: string;
-    expiresAt: string;
+    expires_at: string;
+    user_id: number;
+    username: string;
+    email: string;
 }
 
 export interface RefreshTokenResponse {
