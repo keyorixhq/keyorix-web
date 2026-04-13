@@ -22,7 +22,7 @@ import { usePreferencesStore } from '../../store/preferencesStore';
 import { Secret, SecretFilters, PaginationState, SecretType } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Dropdown } from '../../components/ui/Dropdown';
+import { Select } from '../../components/ui/Select';
 import { Loading } from '../../components/ui/Loading';
 import { Alert } from '../../components/ui/Alert';
 
@@ -49,10 +49,10 @@ const SORT_OPTIONS = [
 ];
 
 const PAGE_SIZE_OPTIONS = [
-    { value: 10, label: '10 per page' },
-    { value: 20, label: '20 per page' },
-    { value: 50, label: '50 per page' },
-    { value: 100, label: '100 per page' },
+    { value: '10', label: '10 per page' },
+    { value: '20', label: '20 per page' },
+    { value: '50', label: '50 per page' },
+    { value: '100', label: '100 per page' },
 ];
 
 export const SecretsListPage: React.FC = () => {
@@ -349,30 +349,29 @@ export const SecretsListPage: React.FC = () => {
 
                         {/* Type Filter */}
                         <div>
-                            <Dropdown
+                            <Select
                                 value={filters.type}
-                                onChange={(value) => handleFilterChange('type', value)}
+                                onChange={(e) => handleFilterChange('type', e.target.value)}
                                 options={SECRET_TYPES}
-                                placeholder="Type"
+                                placeholder="All Types"
                             />
                         </div>
 
                         {/* Sort */}
                         <div>
-                            <Dropdown
+                            <Select
                                 value={sortBy}
-                                onChange={setSortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
                                 options={SORT_OPTIONS}
                                 placeholder="Sort by"
-                                icon={ArrowsUpDownIcon}
                             />
                         </div>
 
                         {/* Page Size */}
                         <div>
-                            <Dropdown
-                                value={pagination.pageSize}
-                                onChange={handlePageSizeChange}
+                            <Select
+                                value={String(pagination.pageSize)}
+                                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                                 options={PAGE_SIZE_OPTIONS}
                                 placeholder="Page size"
                             />

@@ -210,11 +210,33 @@ export const apiService = {
             environment?: string;
             tags?: string[];
         }): Promise<PaginatedResponse<Secret>> {
-            const response = await apiClient.get<ApiResponse<PaginatedResponse<Secret>>>(
+            const response = await apiClient.get(
                 API_ENDPOINTS.SECRETS.LIST,
                 { params }
             );
-            return response.data.data;
+            const { secrets, total, page, page_size, total_pages } = response.data.data;
+            const mappedSecrets: Secret[] = (secrets ?? []).map((s: any) => ({
+                id: s.ID,
+                name: s.Name,
+                type: s.Type,
+                isShared: s.IsShared ?? false,
+                shareCount: s.share_count ?? 0,
+                lastModified: s.UpdatedAt ?? s.CreatedAt ?? '',
+                owner: s.CreatedBy ?? '',
+                namespace: '',
+                zone: '',
+                environment: '',
+                tags: [],
+                permissions: [],
+                metadata: {},
+            }));
+            return {
+                data: mappedSecrets,
+                total: total ?? 0,
+                page: page ?? 1,
+                pageSize: page_size ?? (params?.pageSize ?? 20),
+                totalPages: total_pages ?? 1,
+            };
         },
 
         async get(id: number): Promise<Secret> {
