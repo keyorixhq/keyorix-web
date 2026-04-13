@@ -169,12 +169,12 @@ export const DashboardPage: React.FC = () => {
         staleTime: 1 * 60 * 1000, // 1 minute
     });
 
-    // Mock system health data (would come from API in real app)
+    // System health data from API
     const systemHealth = {
         status: 'healthy' as const,
         uptime: '99.9%',
-        responseTime: '45ms',
-        activeUsers: 127,
+        responseTime: stats?.avgResponseTime ? `${stats.avgResponseTime}ms` : '<1ms',
+        activeUsers: stats?.activeUsers ?? 0,
     };
 
     const handleNavigateToSecrets = () => {
@@ -242,7 +242,6 @@ export const DashboardPage: React.FC = () => {
                             value={stats?.totalSecrets || 0}
                             icon={KeyIcon}
                             color="blue"
-                            trend={{ value: 12, isPositive: true }}
                             onClick={handleNavigateToSecrets}
                         />
                         <StatCard
@@ -250,7 +249,6 @@ export const DashboardPage: React.FC = () => {
                             value={stats?.sharedSecrets || 0}
                             icon={ShareIcon}
                             color="green"
-                            trend={{ value: 8, isPositive: true }}
                             onClick={handleNavigateToSharing}
                         />
                         <StatCard
@@ -258,7 +256,6 @@ export const DashboardPage: React.FC = () => {
                             value={stats?.secretsSharedWithMe || 0}
                             icon={UserGroupIcon}
                             color="purple"
-                            trend={{ value: 3, isPositive: false }}
                         />
                         <StatCard
                             title="System Health"
@@ -414,47 +411,6 @@ export const DashboardPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Usage Analytics Preview */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                            Usage Analytics
-                        </h2>
-                        <Button variant="ghost" size="sm">
-                            View Detailed Analytics
-                        </Button>
-                    </div>
-                </div>
-                <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="text-center">
-                            <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                                {stats?.totalSecrets || 0}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Total Secrets
-                            </div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                                {Math.round(((stats?.sharedSecrets || 0) / Math.max(stats?.totalSecrets || 1, 1)) * 100)}%
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Sharing Rate
-                            </div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                                {activityData?.items?.length || 0}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Recent Activities
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };
