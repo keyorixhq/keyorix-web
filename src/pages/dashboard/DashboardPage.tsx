@@ -288,7 +288,7 @@ export const DashboardPage: React.FC = () => {
                         <div className="p-6">
                             {activityLoading ? (
                                 <Loading />
-                            ) : activityData?.data.length === 0 ? (
+                            ) : activityData?.items?.length === 0 ? (
                                 <div className="text-center py-8">
                                     <ClockIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                                     <p className="text-gray-500 dark:text-gray-400">
@@ -297,7 +297,7 @@ export const DashboardPage: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {activityData?.data.slice(0, 5).map((activity) => (
+                                    {activityData?.items?.slice(0, 5).map((activity) => (
                                         <ActivityItemComponent key={activity.id} activity={activity} />
                                     ))}
                                 </div>
@@ -446,7 +446,7 @@ export const DashboardPage: React.FC = () => {
                         </div>
                         <div className="text-center">
                             <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                                {activityData?.data.length || 0}
+                                {activityData?.items?.length || 0}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
                                 Recent Activities
