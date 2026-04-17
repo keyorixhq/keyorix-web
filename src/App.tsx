@@ -5,6 +5,7 @@ import { ProtectedRoute, PublicRoute, AdminRoute } from './components/layout';
 import { SessionTimeoutWarning } from './components/ui';
 import { LoginPage } from './pages/auth';
 import { DashboardPage } from './pages/dashboard';
+import { AuditLogPage } from './pages/audit/AuditLogPage';
 import { ROUTES } from './constants';
 
 function App() {
@@ -57,6 +58,15 @@ function App() {
                 </div>
               </div>
             </AdminRoute>
+          }
+        />
+
+        <Route
+          path={ROUTES.AUDIT}
+          element={
+            <ProtectedRoute>
+              <AuditLogPage />
+            </ProtectedRoute>
           }
         />
 

@@ -61,6 +61,7 @@ export const ROUTES = {
     PROFILE: '/profile',
     SETTINGS: '/settings',
     SECURITY: '/security',
+    AUDIT: '/audit',
     ADMIN: '/admin',
     ADMIN_USERS: '/admin/users',
     ADMIN_ROLES: '/admin/roles',

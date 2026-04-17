@@ -370,6 +370,7 @@ export const DashboardPage: React.FC = () => {
                             <Button
                                 variant="outline"
                                 className="w-full justify-start"
+                                onClick={() => navigate(ROUTES.AUDIT)}
                             >
                                 <EyeIcon className="h-4 w-4 mr-3" />
                                 View Audit Logs
