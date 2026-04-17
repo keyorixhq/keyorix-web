@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     MagnifyingGlassIcon,
     PlusIcon,
@@ -10,6 +10,7 @@ import {
     TrashIcon,
     ShareIcon,
     DocumentDuplicateIcon,
+    CheckIcon,
     XMarkIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -19,7 +20,7 @@ import { apiService } from '../../services/api';
 import { queryKeys } from '../../lib/queryClient';
 import { useUIStore } from '../../store/uiStore';
 import { usePreferencesStore } from '../../store/preferencesStore';
-import { Secret, SecretFilters, PaginationState, SecretType } from '../../types';
+import { Secret, SecretFilters, PaginationState, SecretType, SecretFormData } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -27,6 +28,7 @@ import { Loading } from '../../components/ui/Loading';
 import { Alert } from '../../components/ui/Alert';
 import { Modal } from '../../components/ui/Modal';
 import { SecretDetailView } from '../../components/secrets/SecretDetailView';
+import { ShareSecretModal } from '../../components/sharing/ShareSecretModal';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -58,7 +60,8 @@ const PAGE_SIZE_OPTIONS = [
 ];
 
 export const SecretsListPage: React.FC = () => {
-    const { openModal, selectedItems, toggleSelectedItem, clearSelectedItems, bulkActionMode, setBulkActionMode } = useUIStore();
+    const { openModal, closeModal, activeModal, modalData, selectedItems, toggleSelectedItem, clearSelectedItems, bulkActionMode, setBulkActionMode } = useUIStore();
+    const queryClient = useQueryClient();
     const { getFormattedDate } = usePreferencesStore();
 
     // State for filters and pagination
@@ -82,6 +85,65 @@ export const SecretsListPage: React.FC = () => {
     const [tagInput, setTagInput] = useState('');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [viewingSecret, setViewingSecret] = useState<Secret | null>(null);
+
+    // Copy-to-clipboard state
+    const [copyingSecretId, setCopyingSecretId] = useState<number | null>(null);
+    const [copiedSecretId, setCopiedSecretId] = useState<number | null>(null);
+    const [copyErrorId, setCopyErrorId] = useState<number | null>(null);
+
+    const handleCopySecretValue = async (secret: Secret) => {
+        setCopyingSecretId(secret.id);
+        setCopyErrorId(null);
+        try {
+            const versions = await apiService.secrets.getVersions(secret.id);
+            if (!versions || versions.length === 0) throw new Error('No versions found');
+            const latest = versions[0];
+            // EncryptedValue arrives as a base64 string from the API
+            const decoded = atob(latest.EncryptedValue as unknown as string);
+            await navigator.clipboard.writeText(decoded);
+            setCopiedSecretId(secret.id);
+            setTimeout(() => setCopiedSecretId(null), 2000);
+        } catch {
+            setCopyErrorId(secret.id);
+            setTimeout(() => setCopyErrorId(null), 2000);
+        } finally {
+            setCopyingSecretId(null);
+        }
+    };
+
+    // Edit modal form state
+    const [editName, setEditName] = useState('');
+    const [editType, setEditType] = useState<SecretType>('text');
+    const [editValue, setEditValue] = useState('');
+
+    // Initialise edit form fields when the modal opens
+    React.useEffect(() => {
+        if (activeModal === 'edit-secret' && modalData?.secret) {
+            setEditName(modalData.secret.name);
+            setEditType(modalData.secret.type as SecretType);
+            setEditValue('');
+        }
+    }, [activeModal, modalData]);
+
+    const editMutation = useMutation({
+        mutationFn: ({ id, name, type, value }: { id: number; name: string; type: SecretType; value: string }) => {
+            const updateData: Partial<SecretFormData> = { name, type };
+            if (value.trim()) updateData.value = value;
+            return apiService.secrets.update(id, updateData);
+        },
+        onSuccess: () => {
+            closeModal();
+            refetch();
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => apiService.secrets.delete(id),
+        onSuccess: () => {
+            closeModal();
+            refetch();
+        },
+    });
 
     // Fetch secrets with filters and pagination
     const { data, isLoading, error, refetch, isFetching } = useQuery({
@@ -677,10 +739,18 @@ export const SecretsListPage: React.FC = () => {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleDuplicateSecret(secret)}
-                                                    title="Duplicate secret"
+                                                    onClick={() => handleCopySecretValue(secret)}
+                                                    title="Copy value to clipboard"
+                                                    disabled={copyingSecretId === secret.id}
+                                                    className={copyErrorId === secret.id ? 'text-red-500' : ''}
                                                 >
-                                                    <DocumentDuplicateIcon className="h-4 w-4" />
+                                                    {copyingSecretId === secret.id ? (
+                                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                    ) : copiedSecretId === secret.id ? (
+                                                        <CheckIcon className="h-4 w-4 text-green-500" />
+                                                    ) : (
+                                                        <DocumentDuplicateIcon className="h-4 w-4" />
+                                                    )}
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
@@ -889,6 +959,135 @@ export const SecretsListPage: React.FC = () => {
                     />
                 )}
             </Modal>
+
+            {/* Edit Secret Modal */}
+            <Modal
+                isOpen={activeModal === 'edit-secret'}
+                onClose={closeModal}
+                title={`Edit Secret: ${modalData?.secret?.name ?? ''}`}
+                size="md"
+            >
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!modalData?.secret) return;
+                        editMutation.mutate({
+                            id: modalData.secret.id,
+                            name: editName,
+                            type: editType,
+                            value: editValue,
+                        });
+                    }}
+                    className="space-y-4"
+                >
+                    {editMutation.error && (
+                        <Alert
+                            type="error"
+                            title="Failed to update secret"
+                            message={editMutation.error instanceof Error ? editMutation.error.message : 'An unexpected error occurred'}
+                        />
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Name
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Type
+                        </label>
+                        <Select
+                            value={editType}
+                            onChange={(e) => setEditType(e.target.value as SecretType)}
+                            options={SECRET_TYPES.filter(t => t.value !== 'all') as { value: SecretType; label: string }[]}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            New Value
+                        </label>
+                        <input
+                            type="password"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            placeholder="Leave blank to keep existing value"
+                            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Leave blank to keep the existing value.
+                        </p>
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button type="button" variant="outline" onClick={closeModal} disabled={editMutation.isLoading}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={editMutation.isLoading}>
+                            {editMutation.isLoading ? 'Saving…' : 'Save Changes'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Delete Secret Modal */}
+            <Modal
+                isOpen={activeModal === 'delete-secret'}
+                onClose={closeModal}
+                title="Delete Secret"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {deleteMutation.error && (
+                        <Alert
+                            type="error"
+                            title="Failed to delete secret"
+                            message={deleteMutation.error instanceof Error ? deleteMutation.error.message : 'An unexpected error occurred'}
+                        />
+                    )}
+
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                        Are you sure you want to delete{' '}
+                        <span className="font-semibold">{modalData?.secret?.name}</span>?
+                        The secret will be soft-deleted and can be restored within 30 days.
+                    </p>
+
+                    <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button variant="outline" onClick={closeModal} disabled={deleteMutation.isLoading}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={() => modalData?.secret && deleteMutation.mutate(modalData.secret.id)}
+                            disabled={deleteMutation.isLoading}
+                        >
+                            {deleteMutation.isLoading ? 'Deleting…' : 'Delete'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Share Secret Modal */}
+            {activeModal === 'share-secret' && modalData?.secret && (
+                <ShareSecretModal
+                    secret={modalData.secret}
+                    isOpen
+                    onClose={closeModal}
+                    onSuccess={() => {
+                        closeModal();
+                        refetch();
+                    }}
+                />
+            )}
         </div>
     );
 };

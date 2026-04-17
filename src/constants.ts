@@ -23,7 +23,7 @@ export const API_ENDPOINTS = {
     },
     SHARING: {
         LIST: '/api/v1/shares',
-        CREATE: '/api/v1/shares',
+        CREATE: (secretId: number) => `/api/v1/secrets/${secretId}/share`,
         GET: (id: number) => `/api/v1/shares/${id}`,
         UPDATE: (id: number) => `/api/v1/shares/${id}`,
         DELETE: (id: number) => `/api/v1/shares/${id}`,

@@ -298,7 +298,7 @@ export const apiService = {
 
         async create(data: ShareFormData & { secretId: number }): Promise<ShareRecord> {
             const response = await apiClient.post<ApiResponse<ShareRecord>>(
-                API_ENDPOINTS.SHARING.CREATE,
+                API_ENDPOINTS.SHARING.CREATE(data.secretId),
                 data
             );
             return response.data.data;
@@ -343,11 +343,17 @@ export const apiService = {
         },
 
         async search(query: string): Promise<Recipient[]> {
-            const response = await apiClient.get<ApiResponse<Recipient[]>>(
+            const response = await apiClient.get(
                 API_ENDPOINTS.USERS.SEARCH,
                 { params: { q: query } }
             );
-            return response.data.data;
+            const users = response.data.data?.users ?? [];
+            return users.map((u: any) => ({
+                id: u.id,
+                name: u.username,
+                type: 'user' as const,
+                email: u.email,
+            }));
         },
     },
 

@@ -33,7 +33,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     return (
         <Menu as="div" className={clsx('relative inline-block text-left', className)}>
-            <Menu.Button as={Fragment}>
+            <Menu.Button as="div" className="cursor-pointer">
                 {trigger}
             </Menu.Button>
 
@@ -53,7 +53,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     )}
                 >
                     <div className="py-1">
-                        {items.map((item) => {
+                        {(items ?? []).map((item) => {
                             const Icon = item.icon;
 
                             return (
