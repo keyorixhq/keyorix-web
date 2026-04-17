@@ -223,9 +223,9 @@ export const apiService = {
                 shareCount: s.share_count ?? 0,
                 lastModified: s.UpdatedAt ?? s.CreatedAt ?? '',
                 owner: s.CreatedBy ?? '',
-                namespace: s.namespace ?? '',
-                zone: s.zone ?? '',
-                environment: s.environment ?? '',
+                namespace: s.namespace_name ?? s.namespace ?? 'default',
+                zone: s.zone_name ?? s.zone ?? '',
+                environment: s.environment_name ?? s.environment ?? 'production',
                 tags: [],
                 permissions: [],
                 metadata: {},
@@ -246,7 +246,7 @@ export const apiService = {
             return response.data.data;
         },
 
-        async create(data: SecretFormData): Promise<Secret> {
+        async create(data: any): Promise<Secret> {
             const response = await apiClient.post<ApiResponse<Secret>>(
                 API_ENDPOINTS.SECRETS.CREATE,
                 data

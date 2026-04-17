@@ -111,6 +111,27 @@ export const SecretsListPage: React.FC = () => {
         }
     };
 
+    // Create modal form state
+    const [createName, setCreateName] = useState('');
+    const [createValue, setCreateValue] = useState('');
+    const [createType, setCreateType] = useState<SecretType>('text');
+    const [createError, setCreateError] = useState('');
+
+    const createMutation = useMutation({
+        mutationFn: (data: SecretFormData) => apiService.secrets.create(data),
+        onSuccess: () => {
+            closeModal();
+            setCreateName('');
+            setCreateValue('');
+            setCreateType('text');
+            setCreateError('');
+            refetch();
+        },
+        onError: (err: unknown) => {
+            setCreateError(err instanceof Error ? err.message : 'An unexpected error occurred');
+        },
+    });
+
     // Edit modal form state
     const [editName, setEditName] = useState('');
     const [editType, setEditType] = useState<SecretType>('text');
@@ -1074,6 +1095,107 @@ export const SecretsListPage: React.FC = () => {
                         </Button>
                     </div>
                 </div>
+            </Modal>
+
+            {/* Create Secret Modal */}
+            <Modal
+                isOpen={activeModal === 'create-secret'}
+                onClose={() => {
+                    closeModal();
+                    setCreateName('');
+                    setCreateValue('');
+                    setCreateType('text');
+                    setCreateError('');
+                }}
+                title="Create New Secret"
+                size="md"
+            >
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        setCreateError('');
+                        createMutation.mutate({
+                            name: createName,
+                            value: createValue,
+                            type: createType,
+                            namespace_id: 1,
+                            zone_id: 1,
+                            environment_id: 1,
+                        } as any);
+                    }}
+                    className="space-y-4"
+                >
+                    {createError && (
+                        <Alert
+                            type="error"
+                            title="Failed to create secret"
+                            message={createError}
+                        />
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={createName}
+                            onChange={(e) => setCreateName(e.target.value)}
+                            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Value <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            required
+                            rows={4}
+                            value={createValue}
+                            onChange={(e) => setCreateValue(e.target.value)}
+                            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Type
+                        </label>
+                        <Select
+                            value={createType}
+                            onChange={(e) => setCreateType(e.target.value as SecretType)}
+                            options={[
+                                { value: 'text', label: 'Generic' },
+                                { value: 'password', label: 'Password' },
+                                { value: 'api_key', label: 'API Key' },
+                                { value: 'certificate', label: 'Certificate' },
+                                { value: 'json', label: 'JSON' },
+                            ]}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                closeModal();
+                                setCreateName('');
+                                setCreateValue('');
+                                setCreateType('text');
+                                setCreateError('');
+                            }}
+                            disabled={createMutation.isLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={createMutation.isLoading}>
+                            {createMutation.isLoading ? 'Creating…' : 'Create Secret'}
+                        </Button>
+                    </div>
+                </form>
             </Modal>
 
             {/* Share Secret Modal */}
