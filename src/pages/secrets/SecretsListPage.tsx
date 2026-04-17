@@ -25,6 +25,8 @@ import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Loading } from '../../components/ui/Loading';
 import { Alert } from '../../components/ui/Alert';
+import { Modal } from '../../components/ui/Modal';
+import { SecretDetailView } from '../../components/secrets/SecretDetailView';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -79,6 +81,7 @@ export const SecretsListPage: React.FC = () => {
     const [sortBy, setSortBy] = useState('modified_desc');
     const [tagInput, setTagInput] = useState('');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [viewingSecret, setViewingSecret] = useState<Secret | null>(null);
 
     // Fetch secrets with filters and pagination
     const { data, isLoading, error, refetch, isFetching } = useQuery({
@@ -229,7 +232,7 @@ export const SecretsListPage: React.FC = () => {
 
     // Handle individual secret actions
     const handleViewSecret = (secret: Secret) => {
-        openModal('view-secret', { secret });
+        setViewingSecret(secret);
     };
 
     const handleEditSecret = (secret: Secret) => {
@@ -860,6 +863,32 @@ export const SecretsListPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Secret Detail Modal */}
+            <Modal
+                isOpen={viewingSecret !== null}
+                onClose={() => setViewingSecret(null)}
+                size="xl"
+            >
+                {viewingSecret && (
+                    <SecretDetailView
+                        secret={viewingSecret}
+                        onClose={() => setViewingSecret(null)}
+                        onEdit={(secret) => {
+                            setViewingSecret(null);
+                            handleEditSecret(secret);
+                        }}
+                        onShare={(secret) => {
+                            setViewingSecret(null);
+                            handleShareSecret(secret);
+                        }}
+                        onDelete={(secret) => {
+                            setViewingSecret(null);
+                            handleDeleteSecret(secret);
+                        }}
+                    />
+                )}
+            </Modal>
         </div>
     );
 };

@@ -266,11 +266,11 @@ export const apiService = {
             await apiClient.delete(API_ENDPOINTS.SECRETS.DELETE(id));
         },
 
-        async getVersions(id: number): Promise<any[]> {
-            const response = await apiClient.get<ApiResponse<any[]>>(
+        async getVersions(id: number): Promise<{ EncryptedValue: string; VersionNumber: number; CreatedAt: string }[]> {
+            const response = await apiClient.get(
                 API_ENDPOINTS.SECRETS.VERSIONS(id)
             );
-            return response.data.data;
+            return response.data.data.versions ?? [];
         },
     },
 

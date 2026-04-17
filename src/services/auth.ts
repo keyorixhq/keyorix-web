@@ -20,6 +20,23 @@ const authApi = axios.create({
     withCredentials: true, // Important for HTTP-only cookies
 });
 
+// Add Bearer token from persisted auth state for endpoints that require it (e.g. /auth/refresh)
+authApi.interceptors.request.use((requestConfig) => {
+    try {
+        const raw = localStorage.getItem('auth-storage');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            const token: string | null = parsed?.state?.token ?? null;
+            if (token) {
+                requestConfig.headers.Authorization = `Bearer ${token}`;
+            }
+        }
+    } catch {
+        // Silently ignore — request proceeds without the header
+    }
+    return requestConfig;
+});
+
 // Auth service functions
 export const authService = {
     /**

@@ -40,12 +40,17 @@ export const SecretDetailView: React.FC<SecretDetailViewProps> = ({
     const [showValue, setShowValue] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
 
-    // Fetch full secret details (including value)
-    const { data: fullSecret, isLoading, error } = useQuery({
-        queryKey: queryKeys.secrets.detail(secret.id),
-        queryFn: () => apiService.secrets.get(secret.id),
-        enabled: showValue, // Only fetch when user wants to see the value
+    // Fetch secret versions to reveal the latest value
+    const { data: versions, isLoading, error } = useQuery({
+        queryKey: queryKeys.secrets.versions(secret.id),
+        queryFn: () => apiService.secrets.getVersions(secret.id),
+        enabled: showValue,
     });
+
+    const latestVersion = versions && versions.length > 0
+        ? versions.reduce((a, b) => a.VersionNumber >= b.VersionNumber ? a : b)
+        : null;
+    const secretValue = latestVersion ? atob(latestVersion.EncryptedValue) : null;
 
     // Copy to clipboard with auto-clear
     const handleCopyValue = async (value: string) => {
@@ -168,9 +173,9 @@ export const SecretDetailView: React.FC<SecretDetailViewProps> = ({
                             variant="outline"
                             size="sm"
                             onClick={handleToggleValue}
-                            disabled={isLoading}
+                            disabled={showValue && isLoading}
                         >
-                            {isLoading ? (
+                            {(showValue && isLoading) ? (
                                 <Loading size="sm" />
                             ) : showValue ? (
                                 <>
@@ -185,11 +190,11 @@ export const SecretDetailView: React.FC<SecretDetailViewProps> = ({
                             )}
                         </Button>
 
-                        {showValue && fullSecret && (
+                        {showValue && secretValue && (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleCopyValue(fullSecret.value)}
+                                onClick={() => handleCopyValue(secretValue)}
                                 className={copySuccess ? 'text-green-600' : ''}
                             >
                                 <DocumentDuplicateIcon className="h-4 w-4 mr-2" />
@@ -216,19 +221,19 @@ export const SecretDetailView: React.FC<SecretDetailViewProps> = ({
                             Secret value is hidden for security. Click "Reveal" to view.
                         </p>
                     </div>
-                ) : isLoading ? (
+                ) : (showValue && isLoading) ? (
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-4">
                         <Loading />
                     </div>
-                ) : fullSecret ? (
+                ) : secretValue ? (
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-4">
                         {secret.type === 'json' ? (
                             <pre className="text-sm font-mono text-gray-900 dark:text-white whitespace-pre-wrap overflow-x-auto">
-                                {formatSecretValue(fullSecret.value, secret.type)}
+                                {formatSecretValue(secretValue, secret.type)}
                             </pre>
                         ) : (
                             <div className="text-sm font-mono text-gray-900 dark:text-white break-all">
-                                {fullSecret.value}
+                                {secretValue}
                             </div>
                         )}
                     </div>
