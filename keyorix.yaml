@@ -1,0 +1,73 @@
+environment: ""
+locale:
+    language: ""
+    fallback_language: ""
+server:
+    http:
+        enabled: false
+        port: ""
+        protocol_versions: []
+        tls:
+            enabled: false
+            cert_file: ""
+            key_file: ""
+            allowed_ciphers: []
+        ratelimit:
+            enabled: false
+            requests_per_second: 0
+            burst: 0
+    grpc:
+        enabled: false
+        port: ""
+        protocol_versions: []
+        tls:
+            enabled: false
+            cert_file: ""
+            key_file: ""
+            allowed_ciphers: []
+        ratelimit:
+            enabled: false
+            requests_per_second: 0
+            burst: 0
+storage:
+    type: remote
+    database:
+        path: ""
+        dsn: ""
+        host: ""
+        port: ""
+        name: ""
+        user: ""
+        password: ""
+        ssl_mode: ""
+        max_open_conns: 0
+        max_idle_conns: 0
+        conn_max_lifetime_minutes: 0
+    remote:
+        base_url: http://localhost:8080
+        api_key: e821bd249c92b83cab3a3f7f56e6abac85c3e61900a5248ab5a52cf1814ce009
+        timeout_seconds: 30
+        retry_attempts: 3
+        tls_verify: true
+    encryption:
+        enabled: false
+        use_kek: false
+        kek_path: ""
+        dek_path: ""
+secrets:
+    chunking:
+        enabled: false
+        max_chunk_size_kb: 0
+        max_chunks_per_secret: 0
+    limits:
+        max_secrets_per_user: 0
+security:
+    enable_file_permission_check: false
+    auto_fix_file_permissions: false
+    allow_unsafe_file_permissions: false
+soft_delete:
+    enabled: false
+    retention_days: 0
+purge:
+    enabled: false
+    schedule: ""
