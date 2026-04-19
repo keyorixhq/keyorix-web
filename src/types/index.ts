@@ -80,11 +80,19 @@ export interface Recipient {
 }
 
 // Dashboard types
+export interface StatTrend {
+    value: number;
+    isPositive: boolean;
+}
+
 export interface DashboardStats {
     totalSecrets: number;
     sharedSecrets: number;
     secretsSharedWithMe: number;
     recentActivity: ActivityItem[];
+    totalSecretsTrend?: StatTrend;
+    sharedSecretsTrend?: StatTrend;
+    sharedWithMeTrend?: StatTrend;
 }
 
 export interface ActivityItem {

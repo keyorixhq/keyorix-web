@@ -242,6 +242,7 @@ export const DashboardPage: React.FC = () => {
                             value={stats?.totalSecrets || 0}
                             icon={KeyIcon}
                             color="blue"
+                            trend={stats?.totalSecretsTrend}
                             onClick={handleNavigateToSecrets}
                         />
                         <StatCard
@@ -249,6 +250,7 @@ export const DashboardPage: React.FC = () => {
                             value={stats?.sharedSecrets || 0}
                             icon={ShareIcon}
                             color="green"
+                            trend={stats?.sharedSecretsTrend}
                             onClick={handleNavigateToSharing}
                         />
                         <StatCard
@@ -256,6 +258,7 @@ export const DashboardPage: React.FC = () => {
                             value={stats?.secretsSharedWithMe || 0}
                             icon={UserGroupIcon}
                             color="purple"
+                            trend={stats?.sharedWithMeTrend}
                         />
                         <StatCard
                             title="System Health"
