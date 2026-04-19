@@ -85,6 +85,14 @@ export interface StatTrend {
     isPositive: boolean;
 }
 
+export interface ExpiringSecret {
+    id: number;
+    name: string;
+    environment: string;
+    expiresAt: string;
+    daysLeft: number;
+}
+
 export interface DashboardStats {
     totalSecrets: number;
     sharedSecrets: number;
@@ -93,6 +101,7 @@ export interface DashboardStats {
     totalSecretsTrend?: StatTrend;
     sharedSecretsTrend?: StatTrend;
     sharedWithMeTrend?: StatTrend;
+    expiringSecrets?: ExpiringSecret[];
 }
 
 export interface ActivityItem {

@@ -396,20 +396,42 @@ export const DashboardPage: React.FC = () => {
                             </h2>
                         </div>
                         <div className="p-6">
-                            <div className="flex items-start space-x-3">
-                                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mt-0.5" />
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                        Password Expiry Warning
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        3 secrets have passwords expiring within 30 days
-                                    </p>
-                                    <Button variant="ghost" size="sm" className="mt-2 p-0 h-auto text-xs">
-                                        Review Secrets
+                            {!stats?.expiringSecrets || stats.expiringSecrets.length === 0 ? (
+                                <div className="flex items-center space-x-3 text-green-600 dark:text-green-400">
+                                    <ShieldCheckIcon className="h-5 w-5" />
+                                    <p className="text-sm font-medium">No secrets expiring in the next 30 days</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="flex items-start space-x-3">
+                                        <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                Password Expiry Warning
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                {stats.expiringSecrets.length} secret{stats.expiringSecrets.length > 1 ? 's' : ''} expiring within 30 days
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 mt-2">
+                                        {stats.expiringSecrets.map((s) => (
+                                            <div key={s.id} className="flex items-center justify-between text-xs bg-yellow-50 dark:bg-yellow-900/10 rounded px-3 py-2">
+                                                <div>
+                                                    <span className="font-medium text-gray-900 dark:text-white">{s.name}</span>
+                                                    <span className="ml-2 text-gray-500 dark:text-gray-400 capitalize">{s.environment}</span>
+                                                </div>
+                                                <span className={`font-medium ${s.daysLeft <= 7 ? 'text-red-600' : 'text-yellow-600'}`}>
+                                                    {s.daysLeft}d left
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="mt-1 p-0 h-auto text-xs" onClick={handleNavigateToSecrets}>
+                                        Review Secrets →
                                     </Button>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
