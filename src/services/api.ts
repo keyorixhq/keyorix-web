@@ -299,7 +299,11 @@ export const apiService = {
         async create(data: ShareFormData & { secretId: number }): Promise<ShareRecord> {
             const response = await apiClient.post<ApiResponse<ShareRecord>>(
                 API_ENDPOINTS.SHARING.CREATE(data.secretId),
-                data
+                {
+                    recipient_id: data.recipientId,
+                    is_group: data.recipientType === 'group',
+                    permission: data.permission,
+                }
             );
             return response.data.data;
         },
