@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
@@ -32,6 +32,8 @@ const Modal: React.FC<ModalProps> = ({
         full: 'max-w-full mx-4',
     };
 
+    const initialFocusRef = useRef(null);
+
     const handleClose = () => {
         if (closeOnOverlayClick) {
             onClose();
@@ -40,7 +42,7 @@ const Modal: React.FC<ModalProps> = ({
 
     return (
         <Transition appear show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={() => { if (closeOnOverlayClick) onClose(); }}>
+            <Dialog as="div" className="relative z-50" onClose={() => { if (closeOnOverlayClick) onClose(); }} initialFocus={initialFocusRef}>
                 <Transition.Child
                     as={Fragment}
                     enter="ease-out duration-300"
@@ -95,6 +97,7 @@ const Modal: React.FC<ModalProps> = ({
                                 )}
 
                                 <div className="px-6 py-4">
+                                    <span ref={initialFocusRef} className="sr-only" aria-hidden="true" />
                                     {children}
                                 </div>
                             </Dialog.Panel>
