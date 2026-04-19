@@ -29,6 +29,9 @@ export const API_ENDPOINTS = {
         DELETE: (id: number) => `/api/v1/shares/${id}`,
         SELF_REMOVE: (id: number) => `/api/v1/shares/${id}/self-remove`,
     },
+    ENVIRONMENTS: {
+        LIST: '/api/v1/environments',
+    },
     USERS: {
         LIST: '/api/v1/users',
         GET: (id: number) => `/api/v1/users/${id}`,

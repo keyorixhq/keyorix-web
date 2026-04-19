@@ -208,6 +208,7 @@ export const apiService = {
             namespace?: string;
             zone?: string;
             environment?: string;
+            environment_id?: number;
             tags?: string[];
         }): Promise<PaginatedResponse<Secret>> {
             const response = await apiClient.get(
@@ -325,6 +326,14 @@ export const apiService = {
         },
     },
 
+    // Environments
+    environments: {
+        async list(): Promise<{ id: number; name: string }[]> {
+            const response = await apiClient.get(API_ENDPOINTS.ENVIRONMENTS.LIST);
+            const envs = response.data.data?.environments ?? [];
+            return envs.map((e: any) => ({ id: e.ID, name: e.Name }));
+        },
+    },
     // User management
     users: {
         async list(params?: {

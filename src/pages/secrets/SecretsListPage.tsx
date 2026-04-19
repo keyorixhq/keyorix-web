@@ -166,6 +166,20 @@ export const SecretsListPage: React.FC = () => {
         },
     });
 
+    // Fetch environments for filter dropdown
+    const { data: environments = [] } = useQuery({
+        queryKey: ['environments'],
+        queryFn: () => apiService.environments.list(),
+        staleTime: 5 * 60 * 1000, // cache 5 minutes
+    });
+
+    // Build environment name -> id map
+    const environmentIdMap = React.useMemo(() => {
+        const map: Record<string, number> = {};
+        environments.forEach(e => { map[e.name] = e.id; });
+        return map;
+    }, [environments]);
+
     // Fetch secrets with filters and pagination
     const { data, isLoading, error, refetch, isFetching } = useQuery({
         queryKey: queryKeys.secrets.list({
@@ -181,7 +195,9 @@ export const SecretsListPage: React.FC = () => {
             type: filters.type !== 'all' ? filters.type : undefined,
             namespace: filters.namespace || undefined,
             zone: filters.zone || undefined,
-            environment: filters.environment || undefined,
+            environment_id: filters.environment && environmentIdMap[filters.environment]
+                ? environmentIdMap[filters.environment]
+                : undefined,
             tags: filters.tags.length > 0 ? filters.tags : undefined,
         }),
         keepPreviousData: true,
@@ -443,6 +459,20 @@ export const SecretsListPage: React.FC = () => {
                             />
                         </div>
 
+                        {/* Environment Filter */}
+                        <div>
+                            <Select
+                                value={filters.environment || 'all'}
+                                onChange={(e) => handleFilterChange('environment', e.target.value === 'all' ? '' : e.target.value)}
+                                options={[
+                                    { value: 'all', label: 'All Environments' },
+                                    ...environments.map(e => ({
+                                        value: e.name,
+                                        label: e.name.charAt(0).toUpperCase() + e.name.slice(1),
+                                    })),
+                                ]}
+                            />
+                        </div>
                         {/* Sort */}
                         <div>
                             <Select
@@ -499,15 +529,7 @@ export const SecretsListPage: React.FC = () => {
                                 />
                             </div>
 
-                            {/* Environment Filter */}
-                            <div>
-                                <Input
-                                    type="text"
-                                    placeholder="Environment"
-                                    value={filters.environment}
-                                    onChange={(e) => handleFilterChange('environment', e.target.value)}
-                                />
-                            </div>
+                            {/* Environment Filter — moved to primary filter row */}
                         </div>
                     )}
 
@@ -652,7 +674,7 @@ export const SecretsListPage: React.FC = () => {
                                         Type
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Location
+                                        Environment
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Sharing
@@ -710,10 +732,9 @@ export const SecretsListPage: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            <div>
-                                                <div>{secret.namespace}</div>
-                                                <div className="text-xs">{secret.zone} / {secret.environment}</div>
-                                            </div>
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 capitalize">
+                                                {secret.environment || 'production'}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             {secret.isShared ? (
