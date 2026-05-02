@@ -1,6 +1,6 @@
 # Keyorix Backlog
 ### Single source of truth for all open items. Updated at end of every session.
-### Last updated: May 2026 (post context-system rebuild + frontend cleanup session)
+### Last updated: May 2026 (post frontend refactor — all secret actions working)
 
 Load this file in every session type alongside the relevant L2 file.
 
@@ -22,10 +22,10 @@ Load this file in every session type alongside the relevant L2 file.
 - [ ] **Design partner agreement template** — written agreement for early-access customers.
 - [ ] **Support mailbox** — verify `support@keyorix.com` exists and is monitored. OpenAPI spec references it.
 
-### Frontend (demo-blocking)
-- [ ] **Fix create secret modal** — Headless UI v1.7 focus trap bug closes modal on input click. Options: upgrade to v2.x, add `initialFocus` ref, or replace with custom portal modal.
-- [ ] **Fix share secret submit** — returns error (API endpoint mismatch). Blocks sharing demo.
-- [ ] **Wire user management page** — currently mock. Wire to real API for admin demo.
+### Frontend
+- [ ] **Wire user management page** — currently stub. Wire to real API for admin demo.
+- [ ] **Add `.eslintrc` config** — missing entirely, lint is silent on all machines. Add minimal config before co-founder joins.
+- [ ] **Fix or delete 24 pre-existing test failures** — broken mock setup + i18n infrastructure removed in May 2026 refactor. Clean up before seed round due diligence.
 
 ### Backend
 - [ ] **Dashboard activity feed endpoint** — frontend calls `GET /api/v1/dashboard/activity`, returns 404. Implement backend endpoint.
@@ -92,7 +92,7 @@ Load this file in every session type alongside the relevant L2 file.
 - [ ] **Anomaly detection ML** — Isolation Forest. Target: mid-2027.
 - [ ] **Automated rotation planning** — AI proposes rotation sequence. Requires secret dependency tracking first.
 - [ ] **FinOps/billing module** — usage by team/namespace, chargeback reporting, license management UI.
-- [ ] **Frontend rewrite** — shadcn/ui, keep React Query, drop Zustand + custom formStore. Wait for co-founder.
+- [ ] **Frontend rewrite** — shadcn/ui, keep React Query, drop remaining Zustand. Wait for co-founder.
 - [ ] **ENS certification** — Spain national security scheme. Architecture already aligned.
 - [ ] **KeyProvider Tier 2** — OS Keychain, AWS/GCP/Azure KMS, Kubernetes ServiceAccount, TPM.
 
@@ -136,10 +136,11 @@ Load this file in every session type alongside the relevant L2 file.
 - [x] `keyorix --version` flag
 - [x] `security/ssl/key.pem` — confirmed never committed to git
 - [x] gosec + govulncheck baseline scans — reports in `security/scans/`
-- [x] **L2 context system built** — `keyorix-core.md`, `keyorix-product.md`, `keyorix-gtm.md`, `keyorix-strategy.md`, `keyorix-security.md`, `keyorix-backlog.md`, `keyorix-session-starters.md`, `CLAUDE.md` written to `/Users/andreibeshkov/dev/keyorix/`
-- [x] **L2 files synced to Bible v1.4** — 3 critical security fixes ticked off, new CLI commands added
-- [x] **Filesystem MCP confirmed** — Claude Desktop reads files directly, no manual attachment needed
-- [x] **Frontend repo clarified** — `keyorix-web/` is canonical, stale root-level copy deleted (src/, public/, e2e/, docs/, Dockerfile, docker-compose.yml, all root config files)
-- [x] **Env files moved** — `.env.development`, `.env.production`, `.env.example` → `keyorix-web/`
-- [x] **Frontend build fixed** — 3 dead Kiro files deleted, `react-hook-form` pinned to 7.43.1, build command → `vite build`. Clean build: 647 modules, 1.67s
-- [x] **Frontend + backend working together** — `docker compose up` in `keyorix/` + `npm run dev` in `keyorix-web/`, login confirmed end to end
+- [x] L2 context system built — 8 files in `/Users/andreibeshkov/dev/keyorix/`
+- [x] Filesystem MCP confirmed — Claude reads files directly, no manual attachment needed
+- [x] Frontend repo clarified — `keyorix-web/` canonical, stale root-level copy deleted
+- [x] Frontend build fixed — clean vite build, 647 modules
+- [x] Frontend + backend working together — confirmed end to end
+- [x] **Frontend refactor (May 2026)** — deleted formStore/appStore/preferencesStore/notificationStore, removed recharts/i18next/date-fns, added features/secrets/ layer, uiStore trimmed, authStore validates session on load. Bundle: 233 kB → 152 kB
+- [x] **All secret actions working** — create, edit, delete (single + bulk), rotate, share via web UI
+- [x] **Bulk share disabled** — tooltip shown (backend does not support bulk share)

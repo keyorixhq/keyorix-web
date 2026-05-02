@@ -40,33 +40,46 @@
 
 ---
 
-## Frontend — Page Status (`keyorix-web`)
+## Frontend — Page Status (`keyorix-web`, post-refactor May 2026)
 
-| Page | Status |
-|---|---|
-| Login | ✅ Real — auth store, token refresh |
-| Dashboard | ✅ Stats + activity wired; system health = inline mock |
-| Secrets list | ✅ Real — filtering, sorting, pagination, bulk actions, versioning |
-| Sharing management | ✅ Real — list, delete, self-remove wired |
-| Audit log | ✅ Real — wired to `audit_events` table |
-| User management (admin) | ❌ Mock only |
-| Admin dashboard | ❌ Mock — hardcoded stats |
-| Analytics | ❌ Mock only |
+| Page | API wired | Status |
+|---|---|---|
+| Login | ✅ | Real — auth store, token refresh, /auth/me validation on load |
+| Dashboard | ✅ | Real — stats + activity feed wired |
+| Secrets list | ✅ | Real — create, edit, delete (single + bulk), rotate, share all working |
+| Sharing management | ✅ | Real — list, delete, self-remove wired |
+| Audit log | ✅ | Real — wired to `audit_events` table |
+| Admin | ❌ | Stub — "enterprise tier" placeholder, no mock data, no API calls |
+| Analytics | ❌ | Removed — no backend, recharts dependency removed |
+| Profile | ❌ | Stub |
 
-**Known frontend bugs:**
-- Create secret modal closes on input click (Headless UI v1.7 focus trap bug)
-- Share secret submit returns error (API endpoint mismatch)
-- Environment selector on secrets page not implemented
+**Tech stack:** React 18 + TypeScript, TanStack Query, Zustand (authStore + uiStore only), React Router v6, Axios, Zod + react-hook-form, Tailwind CSS, Vitest + Playwright. Dockerised with nginx.
 
-**Tech stack:** React 18 + TypeScript, React Query, Zustand, React Router v6, Axios, Zod + react-hook-form, Tailwind + Headless UI, Recharts, Vitest + Playwright. Dockerised with nginx.
+**Canonical location:** `/Users/andreibeshkov/dev/keyorix/keyorix-web/` — separate git repo.
 
-**Canonical location:** `/Users/andreibeshkov/dev/keyorix/keyorix-web/` — separate git repo. No frontend files at parent directory root (cleaned up May 2026). Env files: `keyorix-web/.env.development`, `keyorix-web/.env.production`, `keyorix-web/.env.example`.
+### Frontend architecture (post-refactor, May 2026)
 
-**Technical debt note:** Frontend has inconsistent API response handling, overlapping state management (Zustand + React Query + custom form store), type mismatches. Rewrite with shadcn/ui when technical co-founder joins. Do NOT fix incrementally.
+**Deleted:**
+- `formStore`, `appStore`, `preferencesStore`, `notificationStore` — replaced with react-hook-form and local useState
+- `AnalyticsPage`, `AdminDashboardPage`, `UserManagementPage` — no backend, mock data only
+- `components/activity/`, `components/features/`, `components/admin/`
 
-**Build status (May 2026):** `tsc` produces 439 type errors across 55 files — root cause is `@types/react` ts5.0 subfolder conflicting with TypeScript 4.9.5, plus `exactOptionalPropertyTypes: true` cascade. Build command changed to `vite build` (skips `tsc`) so Vite bundles correctly. Runtime is unaffected — all type errors are compile-time only. Full type safety to be restored in the shadcn/ui rewrite.
+**Removed dependencies:** `recharts`, `i18next`, `react-i18next`, `date-fns`
 
-**Vite build output (May 2026):** ✅ Clean. 647 modules, 1.67s. dist/assets: index.css 49kb, vendor 141kb, index 233kb, query 39kb, ui 38kb, router 19kb. Two non-blocking warnings: `"use client"` directive (harmless, Next.js artifact) and dynamic/static import mixing in api.ts (chunking advisory only).
+**Added:** `src/features/secrets/` — `useSecretsList.ts`, `useSecretReveal.ts`, `SecretTableRow.tsx`
+
+**Simplified:** `uiStore` trimmed to sidebar + modal state only. `authStore` validates session on load via `/auth/me` — tampered localStorage token no longer bypasses login.
+
+**Bundle:** 233 kB → 152 kB (35% reduction)
+
+**Known gaps:**
+- No `.eslintrc` config — add before co-founder joins
+- 24 pre-existing test failures — broken mock setup + i18n infrastructure removed. Delete or rewrite before seed round due diligence
+- Bulk share disabled (backend does not support sharing multiple secrets in one call) — tooltip shown
+
+**Build status (May 2026):** `tsc` produces type errors — root cause is `@types/react` ts5.0 subfolder conflicting with TypeScript 4.9.5. Build command is `vite build` (skips `tsc`). Runtime unaffected. Full type safety to be restored in the shadcn/ui rewrite.
+
+**Technical debt:** Frontend rewrite with shadcn/ui deferred until technical co-founder joins. Do NOT fix incrementally.
 
 ---
 
@@ -116,7 +129,7 @@ Backend has Namespace/Zone/Environment. Users see only Project → Environment �
 
 ---
 
-## Current Demo State (April 2026)
+## Current Demo State (May 2026)
 
 **Complete orphaned Vault demo — works end to end:**
 ```bash
@@ -131,39 +144,45 @@ keyorix run --env production -- node app.js
 # Open http://localhost:8080/audit — shows every access logged
 ```
 
-| Feature | Demo-able? |
-|---|---|
-| Login, dashboard, secrets list, reveal, edit, delete | ✅ Yes |
-| Audit log page | ✅ Yes |
-| `keyorix run`, import, export, create/list/get/delete | ✅ Yes |
-| Docker Compose with auto-seeding | ✅ Yes |
-| Create secret via web UI | ❌ Modal bug |
-| Share secret modal | ❌ Submit broken |
+| Feature | Status | Demo-able? |
+|---|---|---|
+| Login / auth | ✅ Working | ✅ Yes |
+| Dashboard with real stats | ✅ Working | ✅ Yes |
+| Secrets list | ✅ Working | ✅ Yes |
+| Secret reveal | ✅ Working | ✅ Yes |
+| Create secret via web UI | ✅ Working | ✅ Yes |
+| Edit secret via web UI | ✅ Working | ✅ Yes |
+| Delete secret (single) | ✅ Working | ✅ Yes |
+| Delete secret (bulk) | ✅ Working | ✅ Yes |
+| Rotate secret via web UI | ✅ Working | ✅ Yes |
+| Share secret modal | ✅ Working | ✅ Yes |
+| Audit log page | ✅ Working | ✅ Yes |
+| Admin page | ⚠️ Stub | ⚠️ Not for demo |
+| `keyorix run` | ✅ Working | ✅ Yes |
+| `keyorix secret import` | ✅ Working | ✅ Yes |
+| `keyorix secret export` | ✅ Working | ✅ Yes |
+| Docker Compose with auto-seeding | ✅ Working | ✅ Yes |
 
 ---
 
 ## Roadmap Priority (M1 focus)
 
-**P1 — Before first customer demo:**
-1. Fix create secret modal (Headless UI focus trap)
-2. Wire share secret submit
-3. Wire user management page to real API
+**P1 — Before first paying customer:**
+1. Wire user management page to real API
+2. OIDC service account auth (CI/CD story)
+3. Secret rotation trigger (manual, via UI)
+4. `keyorix system init` rewrite (server-side bootstrap)
 
-**P2 — Before first paying customer:**
-4. OIDC service account auth (CI/CD story)
-5. Secret rotation trigger (manual, via UI)
-6. `keyorix system init` rewrite (server-side bootstrap, not local config wizard)
+**P2 — Post-M1:**
+5. gRPC protobuf registration
+6. Soft delete storage + service layer (ADR first)
+7. MCP server
+8. Kubernetes operator
 
-**P3 — Post-M1:**
-7. gRPC protobuf registration
-8. Soft delete storage + service layer (ADR first)
-9. MCP server
-10. Kubernetes operator
-
-**Backlog (deferred):**
-- FinOps/billing module (usage by team/namespace, chargeback reporting)
-- Frontend rewrite with shadcn/ui (wait for co-founder)
-- `keyorix system init` full rewrite (deferred — not incremental patch)
+**Deferred (co-founder milestone):**
+- Frontend rewrite with shadcn/ui
+- FinOps/billing module
+- `keyorix system init` full rewrite
 
 ---
 

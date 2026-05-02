@@ -21,7 +21,7 @@ All repos are separate — cloned under `~/dev/keyorix/`. Each is an independent
 | Repo | Local path | Purpose | Status |
 |---|---|---|---|
 | `keyorix` | `~/dev/keyorix/keyorix/` | Go backend — API, CLI, encryption, storage | Working |
-| `keyorix-web` | `~/dev/keyorix/keyorix-web/` | React dashboard (TypeScript) | Partial (core flows work, admin = mock) |
+| `keyorix-web` | `~/dev/keyorix/keyorix-web/` | React dashboard (TypeScript) | ✅ All secret actions working (May 2026 refactor) |
 | `keyorix-mcp` | `~/dev/keyorix/keyorix-mcp/` | MCP server (JavaScript) | Shipped |
 | `keyorix-go` | `~/dev/keyorix/keyorix-go/` | Go SDK | Shipped with petstore examples |
 | `keyorix-python` | `~/dev/keyorix/keyorix-python/` | Python SDK | Shipped with petstore examples |
@@ -65,7 +65,8 @@ go test -race ./...
 | SL incorporation | In progress via gestoria |
 | First signed contract | Pending |
 | Frontend + backend working together | ✅ Confirmed May 2026 |
-| Frontend build clean | ✅ Confirmed May 2026 (vite build, 647 modules) |
+| Frontend build clean | ✅ May 2026 refactor — 152 kB bundle, all secret actions working |
+| authStore session validation | ✅ Validates via /auth/me on load — tampered localStorage token no longer bypasses login |
 | L2 context system | ✅ Built May 2026 — 8 files in `/Users/andreibeshkov/dev/keyorix/` |
 
 ## Pre-existing Test Failures (not regressions — ignore)
@@ -74,6 +75,7 @@ go test -race ./...
 - `TestRemoteCLIIntegration` (needs running server)
 - `TestListSecretsWithSharingInfo` (mock mismatch)
 - `TestRemoteStorage_Health` (timeout)
+- Frontend: 24 test failures — broken mock setup + i18n infrastructure removed in May 2026 refactor. Delete or rewrite before seed round due diligence.
 
 ## L2 File Index — Load by Session Type
 
@@ -94,7 +96,7 @@ go test -race ./...
 1. Verify changes: `go build ./...` + relevant tests
 2. `git stash` to isolate pre-existing failures from regressions
 3. Commit and push after each logical group of changes
-4. End-of-session Bible updates → batch as diff → hand to Claude Code
+4. End-of-session Bible updates → Claude reads L2 files directly via Filesystem MCP and updates them
 
 ## Key Decisions (never relitigate without documented reason)
 
