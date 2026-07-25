@@ -47,9 +47,7 @@ jobs:
       # --prod: dev-only tooling (jsdom/vitest's undici chain) never ships and
       # would make this gate noisy with findings that carry no real exposure.
       - name: Audit dependencies
-        # GHSA-qwww-vcr4-c8h2: react-router DoS fixed in v8.3.0; upgrading to v8
-        # is a breaking change requiring migration work — tracked separately.
-        run: pnpm audit --audit-level=high --prod --ignore-advisories GHSA-qwww-vcr4-c8h2
+        run: pnpm audit --audit-level=high --prod
 
   gitleaks:
     runs-on: ubuntu-latest
