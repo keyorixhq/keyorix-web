@@ -206,15 +206,98 @@ Decide once; retrofitting after the rewrite is double the work:
 
 ## Phase 2 — shadcn setup & component inventory
 
-- Install shadcn CLI; map existing CSS variables (`--bg-app`, `--accent`, etc. in
-  `src/index.css`) onto shadcn's theming layer so dark/light theming isn't lost.
-- Freeze the current component inventory (11 custom UI components in
-  `src/components/ui`, 84 feature files, 14 page dirs) as the migration checklist.
+**Status: done (2026-07-04).** `components.json` + `src/lib/utils.ts` (the
+`cn()` helper) added; `tailwind-merge` and `class-variance-authority`
+installed. `src/index.css` gained an additive `@theme inline` block that
+aliases every shadcn token onto this app's existing semantic vars (`--accent`,
+`--bg-*`, `--border`, etc.) rather than introducing a parallel theme — dark
+mode needs no separate handling for most tokens since they reference the same
+variable the app already flips per `[data-theme]`. Two tokens had no existing
+equivalent and are new: `--radius` (0.5rem, chosen to reproduce the exact
+`rounded-md`/`rounded-lg` pixel values already on screen) and `--danger`
+(red-600/red-500 light/dark, matching `btn-danger`'s existing hardcoded
+color and the `--accent` 600→500 dark-mode lightening pattern). Verified
+additive/zero-regression: the built CSS's `@theme inline` block is fully
+tree-shaken away today since no component references its tokens yet — it
+only activates as each component is actually migrated below.
+
+Corrected component inventory (the original 11/84/14 draft counts were off —
+actual: **15 UI components, 84 feature files, 12 page dirs**). This table is
+the frozen migration checklist for Phases 3-5, ordered by usage (features +
+pages import count):
+
+| Existing | shadcn target | Usage | Note |
+|---|---|---|---|
+| Button | Button | 25 | |
+| Alert | Alert | 24 | |
+| Modal | Dialog | 21 | naming swap: our Modal = shadcn's Dialog |
+| Loading | Skeleton (partial) | 17 | Spinner/Progress/Overlay stay custom, no shadcn equivalent |
+| Input | Input | 10 | |
+| Select | Select | 8 | |
+| Dialog | AlertDialog | 0 | naming swap: our confirm-Dialog = shadcn's AlertDialog |
+| Textarea | Textarea | 2 | |
+| Dropdown | DropdownMenu | 0 | |
+| Toast | Sonner | 0 | matches the stack decision above |
+| CmdKSearch | Command | 0 | not barrel-exported today either |
+| Form | Form | 0 (dead code) | replace wholesale in Phase 5, not touched in Phase 2 |
+| ErrorBoundary | — | — | React pattern, no shadcn equivalent, stays custom |
+| SessionTimeoutWarning | — | — | app-specific, stays custom (restyle via new tokens later) |
+| AbsoluteSessionExpiryWarning | — | — | same as above |
+
+Known deferred decision for Phase 3: shadcn's generated components import
+`lucide-react`; this app uses `@heroicons/react` in 61 files. Reconcile
+per-component as each one is added (swap icons by hand vs. accept a second
+icon lib), not resolved globally here — Button's own migration didn't need
+to touch this, since shadcn's Button imports no icon library itself.
+
+**Resolved (Button's migration)**: rather than running `shadcn add` (whose
+lowercase filenames, e.g. `button.tsx`, would collide with this app's
+existing PascalCase files like `Button.tsx` on case-insensitive filesystems),
+every migrated component is hand-authored from shadcn's verified upstream
+source and kept at its existing PascalCase filename. This sidesteps the
+collision risk entirely — no future component needs the "replace in the same
+commit" workaround, since the lowercase sibling is simply never created.
 
 ## Phase 3 — Migrate leaf primitives
 
 `Button`, `Input`, `Select`, `Alert` → shadcn equivalents. Lowest blast radius,
 highest reuse — validates the theming bridge first.
+
+- **`Button`: done (2026-07-04).** Rewritten on shadcn's actual `cva`-based
+  component (`default/destructive/outline/secondary/ghost` variants,
+  `default/sm/lg` sizes), adding `radix-ui` for `asChild`/`Slot` support.
+  `variant="primary"` → `"default"`, `variant="danger"` → `"destructive"`
+  across all ~27 call sites (including 3 dynamic ternary expressions the
+  initial literal-string grep missed, caught by `tsc`); `icon`/`iconPosition`
+  dropped in favor of shadcn's icon-as-children composition (7 call sites
+  migrated); `fullWidth` dropped (unused). `loading` kept as one deliberate
+  addition beyond upstream (3 real call sites depend on it), reusing the
+  existing inline spinner SVG rather than pulling in an icon library. The
+  now-dead `btn`/`btn-*` utility classes removed from `src/index.css`.
+  Verified the Phase 2 bridge actually activates: compiled CSS now contains
+  real `.bg-primary { background-color: var(--accent) }` /
+  `.bg-destructive { background-color: var(--danger) }` rules. Kept the
+  PascalCase filename (`Button.tsx`, not shadcn's lowercase convention) —
+  this fully resolves Phase 2's filesystem-case-collision note for every
+  future component too, by simply never introducing a lowercase sibling file
+  in this repo at all.
+
+- **`Input`: done (2026-07-04).** Real shadcn Input is a deliberately bare
+  `<input>` — no label/error/icon support (that's react-hook-form's
+  `FormField`/`FormMessage` territory, Phase 5's job, not this one). Kept a
+  thin wrapper around shadcn's actual input styling for `label`/`error`/
+  `helperText`/`icon` — the same kind of scope-justified addition as
+  Button's `loading`. Dropped `leftIcon` (redundant alias), `rightIcon`,
+  `onRightIconClick`, `fullWidth` (zero real usage of any of them, one
+  `fullWidth` call site caught by `tsc` after the initial grep missed it).
+  Adopting the real component simplified the file: error state now uses
+  `aria-invalid` (shadcn's Input styles this natively) instead of hand-rolled
+  red-border classes, and `Math.random()`-based id generation was swapped
+  for `React.useId()`. Every prop still in real use (`label`, `error`,
+  `helperText`, `icon`, native attrs) kept its exact name, so none of the 10
+  call sites needed editing beyond the one dropped `fullWidth`. Verified the
+  bridge again: compiled CSS now contains
+  `.border-input { border-color: var(--border) }`.
 
 ## Phase 4 — Migrate compound components
 
