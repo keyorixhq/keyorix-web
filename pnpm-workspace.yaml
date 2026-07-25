@@ -5,3 +5,10 @@ allowBuilds:
 # pulls a vulnerable range transitively.
 overrides:
   form-data@>=4.0.0 <4.0.6: ^4.0.6
+
+# GHSA-qwww-vcr4-c8h2: react-router RSC-mode CSRF bypass, patched only in
+# v8.3.0 (breaking major). This app uses react-router-dom in SPA mode without
+# RSC, so the vulnerable code path is not reachable.
+auditConfig:
+  ignoreCves:
+    - GHSA-qwww-vcr4-c8h2
