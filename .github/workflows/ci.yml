@@ -42,6 +42,13 @@ jobs:
       - name: Test
         run: pnpm test --run
 
+      # Verifies all production dependency licenses are permissive (MIT, Apache-2.0,
+      # BSD variants, ISC).  Blocks any accidental GPL/AGPL/LGPL ingestion that
+      # would require open-sourcing Keyorix's product code.  Uses pnpm's built-in
+      # `licenses list` command — no external tool needed.
+      - name: Check dependency licenses
+        run: node scripts/license-check.mjs
+
       # Fails on high/critical known-vulnerable dependencies (govulncheck's
       # equivalent for the npm ecosystem, mirrored from keyorix's CI). Scoped to
       # --prod: dev-only tooling (jsdom/vitest's undici chain) never ships and
