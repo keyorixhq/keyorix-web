@@ -7,9 +7,9 @@ import { isPatternSafe, testPatternSafely, MAX_REGEX_TEST_INPUT_LENGTH } from '.
 // through exponentially many ways of partitioning the 'a's before giving up.
 // Native (unguarded) `new RegExp('(a+)+$').test(...)` against this input
 // does not return in any practical amount of time.
-// String is split so static ReDoS scanners do not flag this TEST file — the
-// point of the test is that our guard blocks this pattern before it runs.
-const CATASTROPHIC_PATTERN = '(a+' + ')+$';
+// This string is never passed to a RegExp constructor — our guard rejects
+// it before any regex is built. lgtm suppression keeps the scanner quiet.
+const CATASTROPHIC_PATTERN = '(a+)+$'; // lgtm[js/redos]
 const CATASTROPHIC_INPUT = 'a'.repeat(35) + '!';
 
 // Bound on how long our guard itself is allowed to take. It should be near-
