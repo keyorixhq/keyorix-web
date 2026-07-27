@@ -206,18 +206,10 @@ export const url = {
     /**
      * Parses query parameters from current URL
      */
-    getQueryParams: (): Record<string, string> => {
-        const params = new URLSearchParams(window.location.search);
-        const result = Object.create(null) as Record<string, string>;
-        params.forEach((value, key) => {
-            // Explicitly reject keys that shadow Object prototype members.
-            // Object.create(null) already prevents prototype pollution, but this
-            // guard is the static-analysis-visible sanitizer for the property write.
-            if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
-                result[key] = value;
-            }
-        });
-        return result;
+    getQueryParams: (): Map<string, string> => {
+        // Map has no prototype surface, so user-supplied URL param keys
+        // cannot cause property injection (CodeQL js/remote-property-injection).
+        return new Map(new URLSearchParams(window.location.search));
     },
 };
 
