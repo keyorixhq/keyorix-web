@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useProject, useProjectEnvironments, useRestoreEnvironment, PROJECT_KEYS } from '../../features/projects/api';
 import { apiClient } from '../../services/client';
+import { triggerBlobDownload } from '../../utils';
 import { Button } from '../../components/ui/Button';
 import { Alert } from '../../components/ui/Alert';
 import { Modal } from '../../components/ui/Modal';
@@ -30,14 +31,7 @@ async function downloadInventory(
         const res = await apiClient.get(`/api/v1/projects/${projectId}/secrets/inventory.csv`, {
             responseType: 'blob',
         });
-        const url = URL.createObjectURL(res.data as Blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `secret-inventory-project-${projectId}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        triggerBlobDownload(res.data as Blob, `secret-inventory-project-${projectId}.csv`);
     } catch (err: any) {
         setMsg(err?.response?.data?.message ?? err?.response?.data?.error ?? 'Failed to export inventory.');
     } finally {
