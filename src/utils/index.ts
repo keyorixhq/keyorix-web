@@ -210,7 +210,12 @@ export const url = {
         const params = new URLSearchParams(window.location.search);
         const result = Object.create(null) as Record<string, string>;
         params.forEach((value, key) => {
-            result[key] = value;
+            // Explicitly reject keys that shadow Object prototype members.
+            // Object.create(null) already prevents prototype pollution, but this
+            // guard is the static-analysis-visible sanitizer for the property write.
+            if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+                result[key] = value;
+            }
         });
         return result;
     },
