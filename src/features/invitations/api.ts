@@ -69,6 +69,28 @@ export function useProjectAccessRequests(projectId: number) {
     });
 }
 
+// Self-service creation (ADR-024 Part B): a user without project access asks
+// for one. Invalidates the project's request list so an admin viewing the
+// Members tab sees it appear; harmless no-op for the requester themselves,
+// who lacks permission to list requests anyway.
+export function useCreateAccessRequest(projectId: number) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ suggestedRole, reason }: { suggestedRole: string; reason: string }) =>
+            projectInvitationsApi.createAccessRequest(projectId, suggestedRole, reason),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: INVITATION_KEYS.accessRequests(projectId) }),
+    });
+}
+
+// Self-service withdrawal of one's own pending request.
+export function useWithdrawAccessRequest(projectId: number) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (requestId: number) => projectInvitationsApi.withdrawAccessRequest(projectId, requestId),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: INVITATION_KEYS.accessRequests(projectId) }),
+    });
+}
+
 export function useResolveAccessRequest(projectId: number) {
     const queryClient = useQueryClient();
     return useMutation({

@@ -117,6 +117,17 @@ export const projectInvitationsApi = {
         return rows.map(normalizeAccessRequest);
     },
 
+    // Self-service: a user without project access asks for one. The admin
+    // decides the actual role granted — suggestedRole is advisory only.
+    async createAccessRequest(projectId: number, suggestedRole: string, reason: string): Promise<AccessRequest> {
+        const response = await apiClient.post(`/api/v1/projects/${projectId}/access-requests`, {
+            suggested_role: suggestedRole,
+            reason,
+        });
+        const req = response.data.data?.access_request ?? response.data.access_request ?? response.data;
+        return normalizeAccessRequest(req);
+    },
+
     // Resolve a pending request. The server grants grantedRole (falling back to
     // the suggested role) at the project scope on approve; reject records reason.
     async resolveAccessRequest(

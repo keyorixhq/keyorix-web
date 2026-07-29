@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAuthStore } from '../authStore';
 import { useUIStore } from '../uiStore';
 import { useProjectMruStore } from '../projectMruStore';
+import { useAccessRequestStore } from '../accessRequestStore';
 import { authService } from '../../services/auth';
 import { mockUser } from '../../test/mocks';
 import type { User, LoginResponse } from '../../types';
@@ -201,5 +202,32 @@ describe('projectMruStore', () => {
         const { recordAccess } = useProjectMruStore.getState();
         recordAccess(NaN);
         expect(useProjectMruStore.getState().recentIds).toEqual([]);
+    });
+});
+
+describe('accessRequestStore', () => {
+    beforeEach(() => {
+        useAccessRequestStore.setState({ byProjectId: {} });
+    });
+
+    it('starts empty', () => {
+        expect(useAccessRequestStore.getState().byProjectId).toEqual({});
+    });
+
+    it('recordRequest tracks a submitted request by project', () => {
+        useAccessRequestStore.getState().recordRequest(3, 42, 'project_developer');
+        const entry = useAccessRequestStore.getState().byProjectId[3];
+        expect(entry?.requestId).toBe(42);
+        expect(entry?.suggestedRole).toBe('project_developer');
+        expect(entry?.submittedAt).toEqual(expect.any(String));
+    });
+
+    it('clearRequest removes only the given project entry', () => {
+        useAccessRequestStore.getState().recordRequest(1, 1, 'project_viewer');
+        useAccessRequestStore.getState().recordRequest(2, 2, 'project_viewer');
+        useAccessRequestStore.getState().clearRequest(1);
+        const state = useAccessRequestStore.getState().byProjectId;
+        expect(state[1]).toBeUndefined();
+        expect(state[2]).toBeDefined();
     });
 });

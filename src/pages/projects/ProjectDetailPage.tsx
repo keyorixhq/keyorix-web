@@ -1,12 +1,15 @@
 import React from 'react';
+import axios from 'axios';
 import { Link, useParams, useNavigate, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ChevronRightIcon, FolderIcon } from '@heroicons/react/24/outline';
 import { useProject } from '../../features/projects/api';
+import { useProjectAccessRequests } from '../../features/invitations/api';
 import { ProjectSecretsTab } from './ProjectSecretsTab';
 import { ProjectMembersTab } from './ProjectMembersTab';
 import { ProjectActivityTab } from './ProjectActivityTab';
 import { ProjectAccessReviewTab } from './ProjectAccessReviewTab';
 import { ProjectSettingsTab } from './ProjectSettingsTab';
+import { AccessRequestBanner } from './AccessRequestBanner';
 import { ROUTES } from '../../constants';
 import { useProjectMruStore } from '../../store';
 
@@ -40,7 +43,7 @@ const Breadcrumb: React.FC<{ projectName: string }> = ({ projectName }) => (
 
 // ── TabNav ───────────────────────────────────────────────────────────────────
 
-const TabNav: React.FC<{ projectId: number }> = ({ projectId }) => {
+const TabNav: React.FC<{ projectId: number; pendingRequestCount: number }> = ({ projectId, pendingRequestCount }) => {
     const location = useLocation();
     const base = `/projects/${projectId}`;
 
@@ -54,13 +57,21 @@ const TabNav: React.FC<{ projectId: number }> = ({ projectId }) => {
                     <Link
                         key={tab.id}
                         to={`${base}${tab.path}`}
-                        className="px-4 py-2.5 text-sm font-medium -mb-px border-b-2 transition-colors duration-100"
+                        className="px-4 py-2.5 text-sm font-medium -mb-px border-b-2 transition-colors duration-100 flex items-center gap-1.5"
                         style={{
                             borderBottomColor: active ? 'var(--accent)' : 'transparent',
                             color: active ? 'var(--accent-text)' : 'var(--text-secondary)',
                         }}
                     >
                         {tab.label}
+                        {tab.id === 'members' && pendingRequestCount > 0 && (
+                            <span
+                                className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-xs font-semibold"
+                                style={{ backgroundColor: 'var(--accent-subtle)', color: 'var(--accent-text)' }}
+                            >
+                                {pendingRequestCount}
+                            </span>
+                        )}
                     </Link>
                 );
             })}
@@ -74,8 +85,12 @@ export const ProjectDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const projectId = Number(id);
     const navigate = useNavigate();
-    const { data: project, isLoading, isError } = useProject(projectId);
+    const { data: project, isLoading, isError, error } = useProject(projectId);
     const recordAccess = useProjectMruStore((s) => s.recordAccess);
+    // Only meaningful once the project has loaded (i.e. the user has access);
+    // 403s harmlessly for non-admins viewing their own project, per retry:false.
+    const { data: accessRequests } = useProjectAccessRequests(projectId);
+    const pendingRequestCount = accessRequests?.filter((r) => r.state === 'pending').length ?? 0;
 
     // Record this project as recently accessed once it loads (drives the
     // sidebar switcher's Recent ordering — ADR-018). Captures both
@@ -94,6 +109,9 @@ export const ProjectDetailPage: React.FC = () => {
     }
 
     if (isError || !project) {
+        if (axios.isAxiosError(error) && error.response?.status === 403) {
+            return <AccessRequestBanner projectId={projectId} />;
+        }
         return (
             <div className="p-6 max-w-5xl mx-auto">
                 <Breadcrumb projectName="Unknown" />
@@ -134,7 +152,7 @@ export const ProjectDetailPage: React.FC = () => {
                 </div>
             </div>
 
-            <TabNav projectId={projectId} />
+            <TabNav projectId={projectId} pendingRequestCount={pendingRequestCount} />
 
             <Routes>
                 <Route index element={<Navigate to="secrets" replace />} />
