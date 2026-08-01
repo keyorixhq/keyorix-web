@@ -393,7 +393,10 @@ describe('SharingManagementPage — bulk selection and bulk revoke', () => {
         );
 
         const dialog = screen.getByRole('dialog');
-        expect(within(dialog).getByText('Delete Multiple Shares')).toBeInTheDocument();
+        // Modal also renders an sr-only <h2> with the same text for the dialog's
+        // accessible name (Dialog.tsx passes hideTitleVisually) — scope to the
+        // visible <h3> Dialog.tsx itself renders, not just any matching text.
+        expect(within(dialog).getByRole('heading', { level: 3, name: 'Delete Multiple Shares' })).toBeInTheDocument();
         expect(within(dialog).getByText('Are you sure you want to revoke 2 share(s)?')).toBeInTheDocument();
 
         fireEvent.click(within(dialog).getByRole('button', { name: 'Revoke' }));
@@ -439,7 +442,10 @@ describe('SharingManagementPage — per-row actions', () => {
         );
 
         const dialog = screen.getByRole('dialog');
-        expect(within(dialog).getByText('Delete Share')).toBeInTheDocument();
+        // Modal also renders an sr-only <h2> with the same text for the dialog's
+        // accessible name (Dialog.tsx passes hideTitleVisually) — scope to the
+        // visible <h3> Dialog.tsx itself renders, not just any matching text.
+        expect(within(dialog).getByRole('heading', { level: 3, name: 'Delete Share' })).toBeInTheDocument();
         expect(
             within(dialog).getByText('Are you sure you want to revoke access for "Alice Anderson"?')
         ).toBeInTheDocument();
