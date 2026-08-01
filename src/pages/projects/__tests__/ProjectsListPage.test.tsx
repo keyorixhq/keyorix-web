@@ -21,6 +21,7 @@ const hookState = vi.hoisted(() => ({
     createPending: false,
     deletePending: false,
     restorePending: false,
+    restoreVariables: undefined as number | undefined,
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -32,7 +33,11 @@ vi.mock('../../../features/projects/api', () => ({
     useProjects: (includeDeleted?: boolean) => useProjectsMock(includeDeleted),
     useCreateProject: () => ({ mutateAsync: createMutateAsync, isPending: hookState.createPending }),
     useDeleteProject: () => ({ mutate: deleteMutate, isPending: hookState.deletePending, reset: deleteResetMock }),
-    useRestoreProject: () => ({ mutate: restoreMutate, isPending: hookState.restorePending }),
+    useRestoreProject: () => ({
+        mutate: restoreMutate,
+        isPending: hookState.restorePending,
+        variables: hookState.restoreVariables,
+    }),
 }));
 
 // Matches an element whose own full text (including nested spans, whitespace-normalized)
@@ -62,6 +67,7 @@ beforeEach(() => {
     hookState.createPending = false;
     hookState.deletePending = false;
     hookState.restorePending = false;
+    hookState.restoreVariables = undefined;
     useProjectsMock.mockImplementation(() => ({
         data: hookState.projects,
         isLoading: hookState.isLoading,
@@ -351,21 +357,23 @@ describe('ProjectsListPage', () => {
         expect(restoreMutate).toHaveBeenCalledWith(10);
     });
 
-    // Documented-but-not-fixed bug: `restoring` is threaded from the single, page-level
-    // `useRestoreProject()` mutation and passed identically to *every* ProjectRow. Restoring
-    // one deleted project therefore disables the Restore button on *all* deleted rows, not
-    // just the one being restored (there's no per-row pending state). See ProjectsListPage.tsx
-    // line ~388 (`restoring={restoreProject.isPending}`).
-    it('documents that restoring one project disables Restore on all deleted rows (shared mutation state)', () => {
+    // Fixed: `restoring` is now scoped to the row whose project id matches
+    // the mutation's last-submitted `variables`, not shared across every
+    // ProjectRow from the single page-level `useRestoreProject()` instance.
+    // See ProjectsListPage.tsx (`restoring={restoreProject.isPending &&
+    // restoreProject.variables === p.id}`).
+    it('only disables the Restore button for the row actually being restored', () => {
         hookState.projects = [
             makeProject({ id: 11, name: 'deleted-one', deleted: true }),
             makeProject({ id: 12, name: 'deleted-two', deleted: true }),
         ];
         hookState.restorePending = true;
+        hookState.restoreVariables = 11;
         render(<ProjectsListPage />);
 
         const restoreButtons = screen.getAllByTitle('Restore project');
         expect(restoreButtons).toHaveLength(2);
-        restoreButtons.forEach((button) => expect(button).toBeDisabled());
+        expect(restoreButtons[0]).toBeDisabled(); // deleted-one, id 11 — the pending restore
+        expect(restoreButtons[1]).not.toBeDisabled(); // deleted-two, id 12 — unaffected
     });
 });
