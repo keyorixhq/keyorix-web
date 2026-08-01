@@ -32,6 +32,10 @@ vi.mock('../../../services/users', () => ({
     usersApi: { list: (...args: any[]) => usersApiListMock(...args) },
 }));
 
+vi.mock('../../../store/authStore', () => ({
+    useAuthStore: () => ({ user: { id: 1 } }),
+}));
+
 // The invite flow is owned by features/invitations and covered by its own
 // tests (Phase 1). Here we only verify this tab opens/closes it and passes
 // the right project context — not the modal's internal form behavior.
@@ -159,15 +163,15 @@ describe('ProjectMembersTab', () => {
             expect(within(carolRow).getByDisplayValue('Viewer')).toBeInTheDocument();
         });
 
-        // The members query itself has no isError handling — `data` just falls
-        // back to `[]` via the destructuring default, so a failed fetch renders
-        // the same "No members yet" copy as a project that genuinely has none.
-        // Documented here rather than fixed per the coverage-only scope of this PR.
-        it('BUG: silently shows the empty-members copy when the members query has no data (e.g. it errored)', () => {
-            useProjectMembersMock.mockReturnValue({ data: undefined, isLoading: false });
+        // Fixed: the members query's isError is now surfaced as a distinct
+        // error state, instead of falling through to the same "No members
+        // yet" copy a genuinely empty project shows.
+        it('shows a distinct error state when the members query fails, not the empty-members copy', () => {
+            useProjectMembersMock.mockReturnValue({ data: undefined, isLoading: false, isError: true });
             render(<ProjectMembersTab projectId={1} />);
 
-            expect(screen.getByText(/No members yet\. Add a user above/i)).toBeInTheDocument();
+            expect(screen.getByText(/Failed to load members/i)).toBeInTheDocument();
+            expect(screen.queryByText(/No members yet/i)).not.toBeInTheDocument();
         });
     });
 
@@ -208,32 +212,77 @@ describe('ProjectMembersTab', () => {
     });
 
     describe('remove member', () => {
-        // No window.confirm() guards this action in the source — clicking the
-        // trash icon calls removeMember.mutate immediately. Documented here
-        // (task brief expected a confirmation step) rather than fixed, per the
-        // coverage-only scope of this PR.
-        it('BUG: removes a member immediately with no confirmation prompt', () => {
-            const confirmSpy = vi.spyOn(window, 'confirm');
+        // Fixed: removal now requires window.confirm(), and proceeds only
+        // when confirmed. The mocked current user is id 1, matching
+        // makeMember()'s default userId, so this exercises the self-removal
+        // wording specifically.
+        it('confirms before removing, with a self-removal warning when the current user removes themselves', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+            mockMembers([makeMember(), makeMember({ userId: 2, roleName: 'project_admin' })]);
+            render(<ProjectMembersTab projectId={1} />);
+
+            const removeButtons = screen.getAllByTitle('Remove from project');
+            fireEvent.click(removeButtons[0]); // Alice — userId 1, the mocked "current user"
+
+            expect(confirmSpy).toHaveBeenCalledWith(expect.stringMatching(/remove yourself/i));
+            expect(removeMemberMutate).toHaveBeenCalledWith(1);
+            confirmSpy.mockRestore();
+        });
+
+        it('confirms with the member name (not self-removal wording) when removing someone else', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+            mockMembers([makeMember(), makeMember({ userId: 2, displayName: 'Carol', roleName: 'project_developer' })]);
+            render(<ProjectMembersTab projectId={1} />);
+
+            const removeButtons = screen.getAllByTitle('Remove from project');
+            fireEvent.click(removeButtons[1]); // Carol, userId 2 — not the mocked current user
+
+            expect(confirmSpy).toHaveBeenCalledWith(expect.stringMatching(/remove carol from this project/i));
+            expect(removeMemberMutate).toHaveBeenCalledWith(2);
+            confirmSpy.mockRestore();
+        });
+
+        it('does not remove the member when the confirmation is cancelled', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
             mockMembers([makeMember()]);
             render(<ProjectMembersTab projectId={1} />);
 
             fireEvent.click(screen.getByTitle('Remove from project'));
 
-            expect(confirmSpy).not.toHaveBeenCalled();
-            expect(removeMemberMutate).toHaveBeenCalledWith(1);
+            expect(confirmSpy).toHaveBeenCalled();
+            expect(removeMemberMutate).not.toHaveBeenCalled();
             confirmSpy.mockRestore();
         });
 
-        // No last-owner / can't-remove-self protection exists anywhere in the
-        // source — the current user (however "current user" would be
-        // determined) can be removed from a project like any other member.
-        it('has no last-owner or self-removal protection: an admin member can be removed too', () => {
+        // Fixed: removing the last project_admin (the closest analog to an
+        // "owner" this project model has) is now hard-blocked, before ever
+        // prompting for confirmation.
+        it('blocks removing the last admin, without ever prompting for confirmation', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm');
             mockMembers([makeMember({ roleName: 'project_admin' })]);
             render(<ProjectMembersTab projectId={1} />);
 
             fireEvent.click(screen.getByTitle('Remove from project'));
 
-            expect(removeMemberMutate).toHaveBeenCalledWith(1);
+            expect(confirmSpy).not.toHaveBeenCalled();
+            expect(removeMemberMutate).not.toHaveBeenCalled();
+            expect(screen.getByText(/cannot remove the last admin/i)).toBeInTheDocument();
+            confirmSpy.mockRestore();
+        });
+
+        it('allows removing an admin when another admin remains', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+            mockMembers([
+                makeMember({ roleName: 'project_admin' }),
+                makeMember({ userId: 2, displayName: 'Carol', roleName: 'project_admin' }),
+            ]);
+            render(<ProjectMembersTab projectId={1} />);
+
+            const removeButtons = screen.getAllByTitle('Remove from project');
+            fireEvent.click(removeButtons[1]); // Carol — not the last admin
+
+            expect(removeMemberMutate).toHaveBeenCalledWith(2);
+            confirmSpy.mockRestore();
         });
     });
 
