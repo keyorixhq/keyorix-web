@@ -320,6 +320,15 @@ export const NotificationChannelsPage: React.FC = () => {
 
     const channels = channelsData ?? [];
 
+    // Shared between each Modal's onClose and its own Cancel button so the
+    // close semantics live in exactly one place per modal.
+    const closeCreateModal = () => setCreateOpen(false);
+    const closeEditModal = () => setEditChannel(null);
+    const closeDeleteModal = () => {
+        setDeleteChannel(null);
+        deleteMutation.reset();
+    };
+
     const openCreate = () => {
         setFormData(emptyForm());
         createMutation.reset();
@@ -353,24 +362,18 @@ export const NotificationChannelsPage: React.FC = () => {
 
     const handleCreate = () => {
         if (!formData.name.trim()) return;
-        createMutation.mutate(formToPayload(formData), { onSuccess: () => setCreateOpen(false) });
+        createMutation.mutate(formToPayload(formData), { onSuccess: closeCreateModal });
     };
 
     const handleUpdate = () => {
         if (!editChannel || !formData.name.trim()) return;
-        updateMutation.mutate(
-            { id: editChannel.id, body: formToPayload(formData) },
-            { onSuccess: () => setEditChannel(null) }
-        );
+        updateMutation.mutate({ id: editChannel.id, body: formToPayload(formData) }, { onSuccess: closeEditModal });
     };
 
     const handleDelete = () => {
         if (!deleteChannel) return;
         deleteMutation.mutate(deleteChannel.id, {
-            onSuccess: () => {
-                deleteMutation.reset();
-                setDeleteChannel(null);
-            },
+            onSuccess: closeDeleteModal,
         });
     };
 
@@ -479,14 +482,14 @@ export const NotificationChannelsPage: React.FC = () => {
             </div>
 
             {/* Create Channel */}
-            <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Channel">
+            <Modal isOpen={createOpen} onClose={closeCreateModal} title="New Channel">
                 <div className="space-y-4">
                     <ChannelFormFields form={formData} setForm={setFormData} />
                     {createMutation.isError && (
                         <p className="text-sm text-red-600">Failed to create channel. Please try again.</p>
                     )}
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="secondary" onClick={() => setCreateOpen(false)}>
+                        <Button variant="secondary" onClick={closeCreateModal}>
                             Cancel
                         </Button>
                         <Button
@@ -501,14 +504,14 @@ export const NotificationChannelsPage: React.FC = () => {
             </Modal>
 
             {/* Edit Channel */}
-            <Modal isOpen={editChannel !== null} onClose={() => setEditChannel(null)} title="Edit Channel">
+            <Modal isOpen={editChannel !== null} onClose={closeEditModal} title="Edit Channel">
                 <div className="space-y-4">
                     <ChannelFormFields form={formData} setForm={setFormData} />
                     {updateMutation.isError && (
                         <p className="text-sm text-red-600">Failed to update channel. Please try again.</p>
                     )}
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="secondary" onClick={() => setEditChannel(null)}>
+                        <Button variant="secondary" onClick={closeEditModal}>
                             Cancel
                         </Button>
                         <Button
@@ -526,15 +529,7 @@ export const NotificationChannelsPage: React.FC = () => {
             <RetryPolicyModal channel={retryPolicyChannel} onClose={() => setRetryPolicyChannel(null)} />
 
             {/* Delete Channel */}
-            <Modal
-                isOpen={deleteChannel !== null}
-                onClose={() => {
-                    setDeleteChannel(null);
-                    deleteMutation.reset();
-                }}
-                title="Delete Channel"
-                size="sm"
-            >
+            <Modal isOpen={deleteChannel !== null} onClose={closeDeleteModal} title="Delete Channel" size="sm">
                 <div className="space-y-4">
                     <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                         Delete channel <strong style={{ color: 'var(--text-primary)' }}>{deleteChannel?.name}</strong>?
@@ -544,13 +539,7 @@ export const NotificationChannelsPage: React.FC = () => {
                         <p className="text-sm text-red-600">Failed to delete channel. Please try again.</p>
                     )}
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button
-                            variant="secondary"
-                            onClick={() => {
-                                setDeleteChannel(null);
-                                deleteMutation.reset();
-                            }}
-                        >
+                        <Button variant="secondary" onClick={closeDeleteModal}>
                             Cancel
                         </Button>
                         <Button variant="destructive" loading={deleteMutation.isPending} onClick={handleDelete}>

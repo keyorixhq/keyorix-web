@@ -68,6 +68,17 @@ const emailChannel = {
     updated_at: '2026-01-02T00:00:00Z',
 };
 
+const bareChannel = {
+    id: 3,
+    name: 'no-target-yet',
+    type: 'webhook',
+    enabled: true,
+    events: '',
+    created_by: 'admin',
+    created_at: '2026-01-03T00:00:00Z',
+    updated_at: '2026-01-03T00:00:00Z',
+};
+
 function resetState() {
     state.channels = { data: undefined, isLoading: false, error: null };
     state.retryPolicy = { data: undefined, isLoading: false };
@@ -119,6 +130,36 @@ describe('NotificationChannelsPage — channels list', () => {
         expect(emailRow.getByText('security@example.com')).toBeInTheDocument();
         expect(emailRow.getByText('None')).toBeInTheDocument();
         expect(emailRow.getByText('Disabled')).toBeInTheDocument();
+    });
+
+    it('shows an em dash for a non-email channel with no url set', () => {
+        state.channels.data = [bareChannel];
+        render(<NotificationChannelsPage />);
+        const row = within(screen.getAllByRole('row')[1]!);
+        expect(row.getByText('—')).toBeInTheDocument();
+    });
+
+    it('swaps the row action buttons to their hover colors on mouse enter and back on leave', () => {
+        state.channels.data = [webhookChannel];
+        render(<NotificationChannelsPage />);
+
+        const retryButton = screen.getByTitle('Retry policy');
+        fireEvent.mouseEnter(retryButton);
+        expect(retryButton.style.color).toBe('var(--text-primary)');
+        fireEvent.mouseLeave(retryButton);
+        expect(retryButton.style.color).toBe('var(--text-muted)');
+
+        const editButton = screen.getByTitle('Edit channel');
+        fireEvent.mouseEnter(editButton);
+        expect(editButton.style.color).toBe('var(--text-primary)');
+        fireEvent.mouseLeave(editButton);
+        expect(editButton.style.color).toBe('var(--text-muted)');
+
+        const deleteButton = screen.getByTitle('Delete channel');
+        fireEvent.mouseEnter(deleteButton);
+        expect(deleteButton.style.color).toBe('rgb(239, 68, 68)');
+        fireEvent.mouseLeave(deleteButton);
+        expect(deleteButton.style.color).toBe('var(--text-muted)');
     });
 });
 
@@ -190,6 +231,45 @@ describe('NotificationChannelsPage — create channel', () => {
         fireEvent.click(screen.getByRole('button', { name: /new channel/i }));
         expect(screen.getByText('Failed to create channel. Please try again.')).toBeInTheDocument();
     });
+
+    it('closes the create modal when Cancel is clicked', () => {
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByRole('button', { name: /new channel/i }));
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('unchecks an event that was previously checked', () => {
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByRole('button', { name: /new channel/i }));
+
+        const dialog = screen.getByRole('dialog');
+        const eventCheckbox = within(dialog).getByLabelText('secret.rotated');
+        fireEvent.click(eventCheckbox);
+        expect(eventCheckbox).toBeChecked();
+        fireEvent.click(eventCheckbox);
+        expect(eventCheckbox).not.toBeChecked();
+    });
+
+    it('toggles the Enabled checkbox off', () => {
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByRole('button', { name: /new channel/i }));
+
+        const dialog = screen.getByRole('dialog');
+        const enabledCheckbox = within(dialog).getByLabelText('Enabled');
+        expect(enabledCheckbox).toBeChecked();
+        fireEvent.click(enabledCheckbox);
+        expect(enabledCheckbox).not.toBeChecked();
+
+        fireEvent.change(within(dialog).getByLabelText('Name'), { target: { value: 'disabled-channel' } });
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
+        expect(mocks.createMutate).toHaveBeenCalledWith(
+            expect.objectContaining({ enabled: false }),
+            expect.objectContaining({ onSuccess: expect.any(Function) })
+        );
+    });
 });
 
 describe('NotificationChannelsPage — edit channel', () => {
@@ -230,6 +310,34 @@ describe('NotificationChannelsPage — edit channel', () => {
         fireEvent.click(screen.getByTitle('Edit channel'));
         expect(screen.getByText('Failed to update channel. Please try again.')).toBeInTheDocument();
     });
+
+    it('closes the edit modal when Cancel is clicked', () => {
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Edit channel'));
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('closes the modal on successful update', () => {
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Edit channel'));
+        fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        const onSuccess = mocks.updateMutate.mock.calls[0]![1].onSuccess;
+        act(() => onSuccess());
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('prefills empty url and email fields when the channel has neither set', () => {
+        state.channels.data = [bareChannel];
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Edit channel'));
+
+        const dialog = screen.getByRole('dialog');
+        expect(within(dialog).getByLabelText('Webhook URL')).toHaveValue('');
+    });
 });
 
 describe('NotificationChannelsPage — delete channel', () => {
@@ -257,6 +365,25 @@ describe('NotificationChannelsPage — delete channel', () => {
         render(<NotificationChannelsPage />);
         fireEvent.click(screen.getByTitle('Delete channel'));
         expect(screen.getByText('Failed to delete channel. Please try again.')).toBeInTheDocument();
+    });
+
+    it('closes the delete modal when Cancel is clicked', () => {
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Delete channel'));
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('closes the modal on successful delete', () => {
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Delete channel'));
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+        const onSuccess = mocks.deleteMutate.mock.calls[0]![1].onSuccess;
+        act(() => onSuccess());
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 });
 
@@ -288,5 +415,38 @@ describe('NotificationChannelsPage — retry policy', () => {
         render(<NotificationChannelsPage />);
         fireEvent.click(screen.getByTitle('Retry policy'));
         expect(document.querySelector('.animate-spin')).toBeTruthy();
+    });
+
+    it('updates the retry backoff field independently of max retries', () => {
+        state.retryPolicy.data = { channel_id: 1, max_retries: 3, retry_backoff_ms: 1000 };
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Retry policy'));
+
+        const dialog = screen.getByRole('dialog');
+        fireEvent.change(within(dialog).getByLabelText('Retry backoff (ms)'), { target: { value: '2500' } });
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+        expect(mocks.setRetryPolicyMutate).toHaveBeenCalledWith({
+            id: 1,
+            body: { max_retries: 3, retry_backoff_ms: 2500 },
+        });
+    });
+
+    it('closes the retry policy modal when Cancel is clicked', () => {
+        state.retryPolicy.data = { channel_id: 1, max_retries: 3, retry_backoff_ms: 1000 };
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Retry policy'));
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('shows an error message when saving the retry policy fails', () => {
+        state.retryPolicy.data = { channel_id: 1, max_retries: 3, retry_backoff_ms: 1000 };
+        state.setRetryPolicyMutation.isError = true;
+        render(<NotificationChannelsPage />);
+        fireEvent.click(screen.getByTitle('Retry policy'));
+        expect(screen.getByText('Failed to save retry policy. Please try again.')).toBeInTheDocument();
     });
 });
