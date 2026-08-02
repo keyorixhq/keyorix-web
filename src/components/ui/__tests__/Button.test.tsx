@@ -48,4 +48,27 @@ describe('Button', () => {
         render(<Button className="custom-class">Custom</Button>);
         expect(screen.getByRole('button')).toHaveClass('custom-class');
     });
+
+    it('renders as its child element via asChild instead of a <button>', () => {
+        render(
+            <Button asChild>
+                <a href="/somewhere">Go</a>
+            </Button>
+        );
+        const link = screen.getByRole('link', { name: 'Go' });
+        expect(link).toBeInTheDocument();
+        expect(link.tagName).toBe('A');
+        expect(link).toHaveClass('bg-primary');
+    });
+
+    it('does not throw when asChild is combined with loading', () => {
+        expect(() =>
+            render(
+                <Button asChild loading>
+                    <a href="/somewhere">Go</a>
+                </Button>
+            )
+        ).not.toThrow();
+        expect(screen.getByRole('link', { name: 'Go' })).toBeInTheDocument();
+    });
 });
