@@ -1,5 +1,12 @@
 # 🌐 Keyorix Web Dashboard - Production Ready
 
+> **Archived.** This repo has been merged into
+> [`keyorixhq/keyorix`](https://github.com/keyorixhq/keyorix) as the
+> [`web/`](https://github.com/keyorixhq/keyorix/tree/main/web) directory
+> (ADR-070). All active development happens there now — open issues/PRs
+> against `keyorix`, not here. This repo is kept archived (read-only) for
+> history; it is not deleted.
+
 Modern React-based web interface for enterprise secret management.
 
 ## ✅ **Production Status**
